@@ -1,0 +1,160 @@
+{% extends "base.html" %}
+
+{% block title %}Stock advice | SalphaPredict{% endblock %}
+
+{% block content %}
+<section class="page-header">
+    <h1 class="h1-page">Stock advice</h1>
+    <p>
+        Stock guidance from uploaded product data: <strong>{{ advice.source_file }}</strong>
+        ({{ advice.date_range.start }} to {{ advice.date_range.end }}).
+    </p>
+</section>
+
+<section class="kpi-grid">
+    <article class="kpi-card">
+        <p class="kpi-label">Products covered</p>
+        <p class="kpi-value">{{ advice.summary.products_with_advice }}</p>
+    </article>
+    <article class="kpi-card">
+        <p class="kpi-label">Priority restock</p>
+        <p class="kpi-value">{{ advice.summary.priority_restock_count }}</p>
+    </article>
+    <article class="kpi-card">
+        <p class="kpi-label">Watch before restocking</p>
+        <p class="kpi-value">{{ advice.summary.watch_count }}</p>
+    </article>
+    <article class="kpi-card">
+        <p class="kpi-label">Suggested units next month</p>
+        <p class="kpi-value">{{ advice.summary.total_suggested_units }}</p>
+    </article>
+</section>
+
+<section class="dashboard-card insight-summary">
+    <h2>Stock insight</h2>
+    {% for paragraph in advice.stock_insight %}
+    <p class="summary-text">{{ paragraph }}</p>
+    {% endfor %}
+</section>
+
+<section class="dashboard-grid charts-grid">
+    <article class="dashboard-card chart-card">
+        <h2>Suggested stock by product</h2>
+        <p class="muted chart-caption">Recommended units to hold for next month, based on sales and forecast.</p>
+        <div id="suggested-stock-chart" class="chart"></div>
+    </article>
+</section>
+
+<section class="dashboard-card table-section highlight-card">
+    <h2>Priority restock</h2>
+    <p class="muted chart-caption">Top sellers and fast-moving products that should stay well stocked.</p>
+    {% if advice.priority_restock %}
+    <div class="table-wrap">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Product</th>
+                    <th>Last month sold</th>
+                    <th>Next month forecast</th>
+                    <th>Suggested stock</th>
+                    <th>Advice</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for row in advice.priority_restock %}
+                <tr>
+                    <td>{{ row.product }}</td>
+                    <td>{{ row.last_month_sold }}</td>
+                    <td>
+                        {% if row.next_month_forecast is not none %}
+                            {{ row.next_month_forecast }}
+                        {% else %}
+                            —
+                        {% endif %}
+                    </td>
+                    <td>{{ row.suggested_stock }}</td>
+                    <td><span class="priority-badge priority-{{ row.priority }}">{{ row.advice_label }}</span></td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <p class="muted">No priority restock items were flagged in the current data.</p>
+    {% endif %}
+</section>
+
+{% if advice.watch_list %}
+<section class="dashboard-card table-section">
+    <h2>Watch before restocking</h2>
+    <p class="muted chart-caption">Products where demand is falling or profit is weak — restock carefully.</p>
+    <div class="table-wrap">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Product</th>
+                    <th>Last month sold</th>
+                    <th>Direction</th>
+                    <th>Suggested stock</th>
+                    <th>Advice</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for row in advice.watch_list %}
+                <tr>
+                    <td>{{ row.product }}</td>
+                    <td>{{ row.last_month_sold }}</td>
+                    <td class="trend-{{ row.trend }}">{{ row.trend_label }}</td>
+                    <td>{{ row.suggested_stock }}</td>
+                    <td><span class="priority-badge priority-{{ row.priority }}">{{ row.advice_label }}</span></td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</section>
+{% endif %}
+
+<section class="dashboard-card table-section">
+    <h2>All product stock advice</h2>
+    <p class="muted chart-caption">Full list of products with suggested stock levels and reasons.</p>
+    <div class="table-wrap">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Product</th>
+                    <th>Total sold</th>
+                    <th>Avg sold per month</th>
+                    <th>Next month forecast</th>
+                    <th>Suggested stock</th>
+                    <th>Advice</th>
+                    <th>Why</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for row in advice.recommendations %}
+                <tr>
+                    <td>{{ row.product }}</td>
+                    <td>{{ row.total_sold }}</td>
+                    <td>{{ row.avg_monthly_sold }}</td>
+                    <td>
+                        {% if row.next_month_forecast is not none %}
+                            {{ row.next_month_forecast }}
+                        {% else %}
+                            —
+                        {% endif %}
+                    </td>
+                    <td>{{ row.suggested_stock }}</td>
+                    <td><span class="priority-badge priority-{{ row.priority }}">{{ row.advice_label }}</span></td>
+                    <td>{{ row.reason }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</section>
+
+<script id="stock-advice-data" type="application/json">{{ chart_data | safe }}</script>
+<script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
+<script src="{{ url_for('static', filename='js/stock_advice.js') }}"></script>
+{% endblock %}

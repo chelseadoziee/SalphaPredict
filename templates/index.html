@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+
+{% block title %}Home | SalphaPredict{% endblock %}
+
+{% block content %}
+<section class="hero section-black">
+    <div class="hero-content">
+        <p class="eyebrow">Salpha Energy</p>
+        <h1 class="h1-large">Product sales insights</h1>
+        <p class="lead">
+            Upload your product sales file, see what sells most, what makes the most money,
+            and plan stock with clearer numbers.
+        </p>
+        <a class="btn btn-primary" href="{{ url_for('upload') }}">Upload sales data</a>
+    </div>
+</section>
+
+<section class="feature-grid">
+    <article class="feature-card">
+        <h2>Upload and clean</h2>
+        <p>Import Excel sales files and prepare them for analysis.</p>
+    </article>
+    <article class="feature-card">
+        <h2>Sales insights</h2>
+        <p>Identify best-selling products, slow movers, and demand trends.</p>
+    </article>
+    <article class="feature-card">
+        <h2>Forecast demand</h2>
+        <p>Estimate future product demand to support planning decisions.</p>
+    </article>
+    <article class="feature-card">
+        <h2>Stock recommendations</h2>
+        <p>Generate practical inventory guidance and trend alerts.</p>
+    </article>
+</section>
+{% endblock %}

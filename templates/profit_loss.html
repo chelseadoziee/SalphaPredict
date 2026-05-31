@@ -1,0 +1,204 @@
+{% extends "base.html" %}
+
+{% block title %}Profit &amp; loss | SalphaPredict{% endblock %}
+
+{% block content %}
+<section class="page-header">
+    <h1 class="h1-page">Profit &amp; loss</h1>
+    <p>
+        Profit and loss summary from uploaded product data: <strong>{{ analysis.source_file }}</strong>
+        ({{ analysis.date_range.start }} to {{ analysis.date_range.end }}).
+    </p>
+</section>
+
+{% if analysis.mock_cost_disclaimer %}
+<section class="dashboard-card notice-card">
+    <p class="summary-text">{{ analysis.mock_cost_disclaimer }}</p>
+</section>
+{% endif %}
+
+<section class="kpi-grid">
+    <article class="kpi-card">
+        <p class="kpi-label">Total money made</p>
+        <p class="kpi-value kpi-value-money" title="{{ analysis.summary.total_money_made | naira_full }}">
+            {{ analysis.summary.total_money_made | naira_compact }}
+        </p>
+    </article>
+    <article class="kpi-card">
+        <p class="kpi-label">Total cost</p>
+        <p class="kpi-value kpi-value-money" title="{{ analysis.summary.total_cost | naira_full }}">
+            {{ analysis.summary.total_cost | naira_compact }}
+        </p>
+    </article>
+    <article class="kpi-card">
+        <p class="kpi-label">Gross profit</p>
+        <p class="kpi-value kpi-value-money" title="{{ analysis.summary.total_gross_profit | naira_full }}">
+            {{ analysis.summary.total_gross_profit | naira_compact }}
+        </p>
+    </article>
+    <article class="kpi-card">
+        <p class="kpi-label">Total loss</p>
+        <p class="kpi-value kpi-value-money trend-down" title="{{ analysis.summary.total_loss | naira_full }}">
+            {{ analysis.summary.total_loss | naira_compact }}
+        </p>
+    </article>
+    <article class="kpi-card">
+        <p class="kpi-label">Net result</p>
+        <p class="kpi-value kpi-value-money" title="{{ analysis.summary.net_result | naira_full }}">
+            {{ analysis.summary.net_result | naira_compact }}
+        </p>
+    </article>
+    <article class="kpi-card">
+        <p class="kpi-label">Loss-making products</p>
+        <p class="kpi-value">{{ analysis.summary.loss_making_products }}</p>
+    </article>
+</section>
+
+<section class="dashboard-card insight-summary">
+    <h2>Profit &amp; loss insight</h2>
+    {% for paragraph in analysis.profit_insight %}
+    <p class="summary-text">{{ paragraph }}</p>
+    {% endfor %}
+</section>
+
+<section class="dashboard-grid charts-grid">
+    <article class="dashboard-card chart-card">
+        <h2>Monthly profit and loss</h2>
+        <p class="muted chart-caption">Gross profit and loss each month, based on money made vs total cost.</p>
+        <div id="monthly-profit-loss-chart" class="chart"></div>
+    </article>
+
+    <article class="dashboard-card chart-card">
+        <h2>Monthly money made vs cost</h2>
+        <p class="muted chart-caption">Compares money made against total cost each month.</p>
+        <div id="monthly-money-cost-chart" class="chart"></div>
+    </article>
+
+    <article class="dashboard-card chart-card">
+        <h2>Profit by product</h2>
+        <p class="muted chart-caption">Products with the highest gross profit.</p>
+        <div id="profit-by-product-chart" class="chart"></div>
+    </article>
+
+    {% if analysis.charts.loss_by_product %}
+    <article class="dashboard-card chart-card">
+        <h2>Loss by product</h2>
+        <p class="muted chart-caption">Products where cost was higher than money made.</p>
+        <div id="loss-by-product-chart" class="chart"></div>
+    </article>
+    {% endif %}
+</section>
+
+<section class="dashboard-card table-section">
+    <h2>Product profit &amp; loss overview</h2>
+    <p class="muted chart-caption">
+        All products with profit data — gross profit, loss, and net result for each one.
+    </p>
+    <div class="table-wrap">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Product</th>
+                    <th>Money made</th>
+                    <th>Total cost</th>
+                    <th>Gross profit</th>
+                    <th>Loss</th>
+                    <th>Net result</th>
+                    <th>Profit margin</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for row in analysis.product_profit_overview %}
+                <tr>
+                    <td>{{ row.product }}</td>
+                    <td>₦{{ "{:,.2f}".format(row.money_made) }}</td>
+                    <td>₦{{ "{:,.2f}".format(row.total_cost) }}</td>
+                    <td>
+                        {% if row.gross_profit %}
+                            ₦{{ "{:,.2f}".format(row.gross_profit) }}
+                        {% else %}
+                            —
+                        {% endif %}
+                    </td>
+                    <td class="{% if row.loss %}trend-down{% endif %}">
+                        {% if row.loss %}
+                            ₦{{ "{:,.2f}".format(row.loss) }}
+                        {% else %}
+                            —
+                        {% endif %}
+                    </td>
+                    <td>₦{{ "{:,.2f}".format(row.net_result) }}</td>
+                    <td>{{ row.profit_margin_pct }}%</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</section>
+
+{% if analysis.loss_making_products %}
+<section class="dashboard-card table-section highlight-card">
+    <h2>Loss-making products</h2>
+    <p class="muted chart-caption">
+        Products where total cost was higher than money made — review pricing or costs for these.
+    </p>
+    <div class="table-wrap">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Product</th>
+                    <th>Money made</th>
+                    <th>Total cost</th>
+                    <th>Loss</th>
+                    <th>Share of total loss</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for row in analysis.loss_making_products %}
+                <tr>
+                    <td>{{ row.product }}</td>
+                    <td>₦{{ "{:,.2f}".format(row.money_made) }}</td>
+                    <td>₦{{ "{:,.2f}".format(row.total_cost) }}</td>
+                    <td class="trend-down">₦{{ "{:,.2f}".format(row.loss) }}</td>
+                    <td>{{ row.loss_share_pct }}%</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</section>
+{% endif %}
+
+<section class="dashboard-card table-section">
+    <h2>Highest margin products</h2>
+    <p class="muted chart-caption">
+        Products with the strongest profit margin — useful when comparing value per sale.
+    </p>
+    <div class="table-wrap">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Product</th>
+                    <th>Money made</th>
+                    <th>Net result</th>
+                    <th>Profit margin</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for row in analysis.highest_margin_products %}
+                <tr>
+                    <td>{{ row.product }}</td>
+                    <td>₦{{ "{:,.2f}".format(row.money_made) }}</td>
+                    <td>₦{{ "{:,.2f}".format(row.net_result) }}</td>
+                    <td>{{ row.profit_margin_pct }}%</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</section>
+
+<script id="profit-loss-data" type="application/json">{{ chart_data | safe }}</script>
+<script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
+<script src="{{ url_for('static', filename='js/profit_loss.js') }}"></script>
+{% endblock %}

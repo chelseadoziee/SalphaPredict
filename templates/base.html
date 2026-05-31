@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}SalphaPredict{% endblock %}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
+</head>
+<body>
+    <header class="site-header">
+        <div class="container header-content">
+            <a class="brand" href="{{ url_for('index') }}">
+                <span class="brand-mark">S</span>
+                <span class="brand-text">
+                    <strong>SalphaPredict</strong>
+                    <small>Salpha Energy</small>
+                </span>
+            </a>
+            <nav class="main-nav">
+                <a href="{{ url_for('index') }}" class="nav-link {% if request.endpoint == 'index' %}active{% endif %}">Home</a>
+                <a href="{{ url_for('upload') }}" class="nav-link {% if request.endpoint == 'upload' %}active{% endif %}">Upload</a>
+                <a href="{{ url_for('dashboard') }}" class="nav-link {% if request.endpoint == 'dashboard' %}active{% endif %}">Sales</a>
+                <a href="{{ url_for('forecast') }}" class="nav-link {% if request.endpoint == 'forecast' %}active{% endif %}">Forecast</a>
+                <a href="{{ url_for('profit_loss') }}" class="nav-link {% if request.endpoint == 'profit_loss' %}active{% endif %}">Profit &amp; loss</a>
+                <a href="{{ url_for('stock_advice') }}" class="nav-link {% if request.endpoint == 'stock_advice' %}active{% endif %}">Stock advice</a>
+                <span class="nav-link disabled">Sales report</span>
+            </nav>
+        </div>
+    </header>
+
+    <main class="container">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                <div class="flash-group">
+                    {% for category, message in messages %}
+                        <div class="flash flash-{{ category }}">{{ message }}</div>
+                    {% endfor %}
+                </div>
+            {% endif %}
+        {% endwith %}
+
+        {% block content %}{% endblock %}
+    </main>
+
+    <footer class="site-footer">
+        <div class="container">
+            <p>SalphaPredict &mdash; Demand intelligence for Salpha Energy</p>
+        </div>
+    </footer>
+</body>
+</html>

@@ -1,0 +1,174 @@
+{% extends "base.html" %}
+
+{% block title %}Product sales dashboard | SalphaPredict{% endblock %}
+
+{% block content %}
+<section class="page-header">
+    <h1 class="h1-page">Salpha Product Insights</h1>
+    <p>
+        Summary from uploaded product data: <strong>{{ analysis.source_file }}</strong>
+        ({{ analysis.date_range.start }} to {{ analysis.date_range.end }}).
+    </p>
+</section>
+
+<section class="kpi-grid">
+    <article class="kpi-card">
+        <p class="kpi-label">Total products sold</p>
+        <p class="kpi-value">{{ analysis.summary.total_units }}</p>
+    </article>
+    <article class="kpi-card">
+        <p class="kpi-label">Total money made</p>
+        <p class="kpi-value kpi-value-money" {% if analysis.summary.total_revenue is not none %}title="{{ analysis.summary.total_revenue | naira_full }}"{% endif %}>
+            {% if analysis.summary.total_revenue is not none %}
+                {{ analysis.summary.total_revenue | naira_compact }}
+            {% else %}
+                —
+            {% endif %}
+        </p>
+    </article>
+    <article class="kpi-card">
+        <p class="kpi-label">Products listed</p>
+        <p class="kpi-value">{{ analysis.summary.unique_products }}</p>
+    </article>
+    <article class="kpi-card">
+        <p class="kpi-label">Average sold per day</p>
+        <p class="kpi-value">{{ analysis.summary.avg_daily_units }}</p>
+    </article>
+    <article class="kpi-card">
+        <p class="kpi-label">Sales direction</p>
+        <p class="kpi-value trend-{{ analysis.demand_trend.direction }}">
+            {{ analysis.demand_trend.label }}
+        </p>
+        {% if analysis.demand_trend.change_pct is not none %}
+            <p class="kpi-sub">
+                {{ analysis.demand_trend.change_pct }}% compared to last month
+            </p>
+        {% endif %}
+    </article>
+    <article class="kpi-card">
+        <p class="kpi-label">Top 3 share of products sold</p>
+        <p class="kpi-value">{{ analysis.summary.top_three_share_pct }}%</p>
+    </article>
+</section>
+
+<section class="dashboard-card insight-summary">
+    <h2>Key insight</h2>
+    {% for paragraph in analysis.key_insight %}
+    <p class="summary-text">{{ paragraph }}</p>
+    {% endfor %}
+</section>
+
+<section class="dashboard-grid charts-grid">
+    <article class="dashboard-card chart-card">
+        <h2>Monthly products sold</h2>
+        <p class="muted chart-caption">Shows how many products were sold each month.</p>
+        <div id="monthly-products-chart" class="chart"></div>
+    </article>
+
+    {% if analysis.summary.total_revenue is not none %}
+    <article class="dashboard-card chart-card">
+        <h2>Monthly money made</h2>
+        <p class="muted chart-caption">Shows how much money was made each month.</p>
+        <div id="monthly-money-chart" class="chart"></div>
+    </article>
+    {% endif %}
+
+    <article class="dashboard-card chart-card">
+        <h2>Most popular products</h2>
+        <p class="muted chart-caption">Shows which products were sold the most.</p>
+        <div id="top-products-chart" class="chart"></div>
+    </article>
+
+    {% if analysis.revenue_by_product %}
+    <article class="dashboard-card chart-card">
+        <h2>Money made by product</h2>
+        <p class="muted chart-caption">Shows which products brought in the most money.</p>
+        <div id="revenue-by-product-chart" class="chart"></div>
+    </article>
+    {% endif %}
+</section>
+
+<section class="dashboard-card table-section">
+    <h2>Product overview</h2>
+    <p class="muted chart-caption">
+        All products in one place — how many were sold and how much money each one made.
+    </p>
+    <div class="table-wrap">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Product</th>
+                    <th>Sold</th>
+                    <th>Share of products sold</th>
+                    {% if analysis.summary.total_revenue is not none %}
+                        <th>Money made</th>
+                        <th>Share of money made</th>
+                    {% endif %}
+                </tr>
+            </thead>
+            <tbody>
+                {% for row in analysis.product_overview %}
+                <tr>
+                    <td>{{ row.product }}</td>
+                    <td>{{ row.quantity }}</td>
+                    <td>{{ row.quantity_share_pct }}%</td>
+                    {% if analysis.summary.total_revenue is not none %}
+                        <td>
+                            {% if row.revenue is not none %}
+                                ₦{{ "{:,.2f}".format(row.revenue) }}
+                            {% else %}
+                                —
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if row.revenue_share_pct is not none %}
+                                {{ row.revenue_share_pct }}%
+                            {% else %}
+                                —
+                            {% endif %}
+                        </td>
+                    {% endif %}
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</section>
+
+<section class="dashboard-card table-section highlight-card">
+    <h2>High-value products</h2>
+    <p class="muted chart-caption">
+        These products made strong money, even when some sold fewer units.
+    </p>
+    {% if analysis.high_value_products %}
+    <div class="table-wrap">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Product</th>
+                    <th>Sold</th>
+                    <th>Money made</th>
+                    <th>Share of money made</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for row in analysis.high_value_products %}
+                <tr>
+                    <td>{{ row.product }}</td>
+                    <td>{{ row.quantity }}</td>
+                    <td>₦{{ "{:,.2f}".format(row.revenue) }}</td>
+                    <td>{{ row.revenue_share_pct }}%</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <p class="muted">No high-value products were identified in the current data.</p>
+    {% endif %}
+</section>
+
+<script id="dashboard-data" type="application/json">{{ chart_data | safe }}</script>
+<script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
+<script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
+{% endblock %}

@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+
+{% block title %}Upload | SalphaPredict{% endblock %}
+
+{% block content %}
+<section class="page-header">
+    <h1 class="h1-page">Upload sales data</h1>
+    <p>
+        Upload an Excel file to clean your product sales data and open the dashboard.
+        Supported formats: .xlsx and .xls.
+    </p>
+</section>
+
+<section class="upload-panel">
+    <form class="upload-form" method="POST" enctype="multipart/form-data">
+        <label class="file-label" for="file">Choose Excel file</label>
+        <input id="file" name="file" type="file" accept=".xlsx,.xls" required>
+        <button class="btn btn-primary" type="submit">Upload and clean</button>
+    </form>
+</section>
+
+{% if cleaning_report and cleaning_report.success %}
+<section class="upload-panel upload-success">
+    <h2>Ready to view</h2>
+    <p>
+        <strong>{{ preview.filename if preview else cleaning_report.cleaned_filename }}</strong>
+        was uploaded and cleaned successfully.
+    </p>
+    <p class="muted">{{ cleaning_report.cleaned_rows }} rows are ready for analysis.</p>
+    <a class="btn btn-primary" href="{{ url_for('dashboard') }}">View product sales dashboard</a>
+    <a class="btn btn-secondary" href="{{ url_for('profit_loss') }}">View profit &amp; loss</a>
+    <a class="btn btn-secondary" href="{{ url_for('stock_advice') }}">View stock advice</a>
+</section>
+{% endif %}
+{% endblock %}

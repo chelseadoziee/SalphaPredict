@@ -1,0 +1,221 @@
+{% extends "base.html" %}
+
+{% block title %}Sales Forecast | SalphaPredict{% endblock %}
+
+{% block content %}
+<section class="page-header">
+    <h1 class="h1-page">Sales Forecast</h1>
+    <p>
+        A simple look at what products may sell next based on uploaded sales data.
+        Source: <strong>{{ forecast.source_file }}</strong>
+        ({{ forecast.history_range.start }} to {{ forecast.history_range.end }}).
+    </p>
+</section>
+
+<section class="dashboard-card forecast-controls">
+    <h2>Forecast settings</h2>
+    <p class="muted chart-caption">Choose how far ahead to look. Product filter applies to all products for now.</p>
+    <form class="forecast-controls-form" method="GET" action="{{ url_for('forecast') }}">
+        <label class="control-field">
+            <span class="control-label">Forecast period</span>
+            <select name="period" class="control-select">
+                {% for option in forecast.controls.forecast_period_options %}
+                <option value="{{ option.value }}" {% if option.value == forecast.forecast_periods %}selected{% endif %}>
+                    {{ option.label }}
+                </option>
+                {% endfor %}
+            </select>
+        </label>
+        <label class="control-field">
+            <span class="control-label">Product filter</span>
+            <select class="control-select" disabled>
+                <option>{{ forecast.controls.product_filter }}</option>
+            </select>
+        </label>
+        <button class="btn btn-primary" type="submit">Update forecast</button>
+    </form>
+</section>
+
+<section class="kpi-grid">
+    <article class="kpi-card">
+        <p class="kpi-label">Expected products sold</p>
+        <p class="kpi-value">{{ forecast.summary.expected_products_sold }}</p>
+        <p class="kpi-sub">{{ forecast.forecast_period_label }}</p>
+    </article>
+    <article class="kpi-card">
+        <p class="kpi-label">Expected money made</p>
+        <p class="kpi-value kpi-value-money" {% if forecast.summary.expected_money_made is not none %}title="{{ forecast.summary.expected_money_made | naira_full }}"{% endif %}>
+            {% if forecast.summary.expected_money_made is not none %}
+                {{ forecast.summary.expected_money_made | naira_compact }}
+            {% else %}
+                —
+            {% endif %}
+        </p>
+    </article>
+    <article class="kpi-card">
+        <p class="kpi-label">Expected profit</p>
+        <p class="kpi-value kpi-value-money" {% if forecast.summary.expected_profit is not none %}title="{{ forecast.summary.expected_profit | naira_full }}"{% endif %}>
+            {% if forecast.summary.has_profit and forecast.summary.expected_profit is not none %}
+                {{ forecast.summary.expected_profit | naira_compact }}
+            {% else %}
+                —
+            {% endif %}
+        </p>
+    </article>
+    <article class="kpi-card">
+        <p class="kpi-label">Restock alerts</p>
+        <p class="kpi-value">{{ forecast.summary.restock_alerts }}</p>
+    </article>
+    <article class="kpi-card">
+        <p class="kpi-label">Top forecast product</p>
+        <p class="kpi-value kpi-value-text">{{ forecast.summary.top_forecast_product }}</p>
+    </article>
+    <article class="kpi-card">
+        <p class="kpi-label">Forecast confidence</p>
+        <p class="kpi-value">{{ forecast.summary.forecast_confidence }}</p>
+        <p class="kpi-sub">{{ forecast.summary.forecast_confidence_detail }}</p>
+    </article>
+</section>
+
+<section class="dashboard-card insight-summary">
+    <h2>What this could mean</h2>
+    {% for paragraph in forecast.what_this_means %}
+    <p class="summary-text">{{ paragraph }}</p>
+    {% endfor %}
+</section>
+
+<section class="dashboard-grid charts-grid">
+    <article class="dashboard-card chart-card">
+        <h2>Expected products sold</h2>
+        <p class="muted chart-caption">Past monthly sales and what may happen next.</p>
+        <div id="forecast-products-chart" class="chart"></div>
+    </article>
+
+    {% if forecast.charts.money_made %}
+    <article class="dashboard-card chart-card">
+        <h2>Expected money made</h2>
+        <p class="muted chart-caption">Past monthly money made and what may happen next.</p>
+        <div id="forecast-money-chart" class="chart"></div>
+    </article>
+    {% endif %}
+
+    {% if forecast.charts.profit %}
+    <article class="dashboard-card chart-card">
+        <h2>Expected profit</h2>
+        <p class="muted chart-caption">Past monthly profit and what may happen next.</p>
+        <div id="forecast-profit-chart" class="chart"></div>
+    </article>
+    {% endif %}
+
+    <article class="dashboard-card chart-card">
+        <h2>Expected sold by product</h2>
+        <p class="muted chart-caption">Which products may sell the most in the forecast period.</p>
+        <div id="forecast-product-units-chart" class="chart"></div>
+    </article>
+
+    {% if forecast.charts.product_money %}
+    <article class="dashboard-card chart-card">
+        <h2>Expected money made by product</h2>
+        <p class="muted chart-caption">Which products may bring in the most money.</p>
+        <div id="forecast-product-money-chart" class="chart"></div>
+    </article>
+    {% endif %}
+
+    {% if forecast.charts.product_profit %}
+    <article class="dashboard-card chart-card">
+        <h2>Expected profit by product</h2>
+        <p class="muted chart-caption">Which products may make the most profit.</p>
+        <div id="forecast-product-profit-chart" class="chart"></div>
+    </article>
+    {% endif %}
+</section>
+
+<section class="dashboard-card table-section">
+    <h2>Product forecast</h2>
+    <p class="muted chart-caption">What each product may do in {{ forecast.forecast_period_label | lower }}.</p>
+    <div class="table-wrap">
+        <table class="data-table">
+            <thead>
+                <tr>
+                    <th>Product</th>
+                    <th>Expected sold</th>
+                    <th>Expected money made</th>
+                    <th>Expected profit</th>
+                    <th>Suggested action</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for row in forecast.forecast_table %}
+                <tr>
+                    <td>{{ row.product }}</td>
+                    <td>{{ row.expected_sold }}</td>
+                    <td>
+                        {% if row.expected_money_made is not none %}
+                            {{ row.expected_money_made | naira_compact }}
+                        {% else %}
+                            —
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if row.expected_profit is not none %}
+                            {{ row.expected_profit | naira_compact }}
+                        {% else %}
+                            —
+                        {% endif %}
+                    </td>
+                    <td><span class="priority-badge priority-{{ 'high' if row.suggested_action == 'Restock regularly' else ('medium' if row.suggested_action in ['Track closely', 'Keep stable'] else 'low') }}">{{ row.suggested_action }}</span></td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</section>
+
+<section class="dashboard-grid three-col">
+    <article class="dashboard-card stock-advice-card">
+        <h2>Restock soon</h2>
+        <p class="muted chart-caption">Fast sellers that may need regular restocking.</p>
+        {% if forecast.stock_advice.restock_soon %}
+        <ul class="stock-advice-list">
+            {% for row in forecast.stock_advice.restock_soon %}
+            <li><strong>{{ row.product }}</strong> — {{ row.suggested_action }} (about {{ row.expected_sold }} units)</li>
+            {% endfor %}
+        </ul>
+        {% else %}
+        <p class="muted">No urgent restock alerts in this forecast.</p>
+        {% endif %}
+    </article>
+
+    <article class="dashboard-card stock-advice-card">
+        <h2>Track closely</h2>
+        <p class="muted chart-caption">Products with rising demand worth watching.</p>
+        {% if forecast.stock_advice.track_closely %}
+        <ul class="stock-advice-list">
+            {% for row in forecast.stock_advice.track_closely %}
+            <li><strong>{{ row.product }}</strong> — {{ row.suggested_action }} (about {{ row.expected_sold }} units)</li>
+            {% endfor %}
+        </ul>
+        {% else %}
+        <p class="muted">No products flagged to track closely.</p>
+        {% endif %}
+    </article>
+
+    <article class="dashboard-card stock-advice-card">
+        <h2>Watch list</h2>
+        <p class="muted chart-caption">Products where demand may fall or profit is weak.</p>
+        {% if forecast.stock_advice.watch_list %}
+        <ul class="stock-advice-list">
+            {% for row in forecast.stock_advice.watch_list %}
+            <li><strong>{{ row.product }}</strong> — {{ row.suggested_action }}</li>
+            {% endfor %}
+        </ul>
+        {% else %}
+        <p class="muted">No products on the watch list.</p>
+        {% endif %}
+    </article>
+</section>
+
+<script id="forecast-data" type="application/json">{{ chart_data | safe }}</script>
+<script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
+<script src="{{ url_for('static', filename='js/forecast.js') }}"></script>
+{% endblock %}

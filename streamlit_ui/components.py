@@ -11,7 +11,10 @@ from logic.formatters import format_naira_compact, format_naira_full
 
 def render_html(body: str) -> None:
     """Render HTML without Markdown treating indented tags as code blocks."""
-    st.html(body)
+    if hasattr(st, "html"):
+        st.html(body)
+    else:
+        st.markdown(body, unsafe_allow_html=True)
 
 
 def page_header(title: str, subtitle: str) -> None:

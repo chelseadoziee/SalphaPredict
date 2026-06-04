@@ -17,10 +17,22 @@ def init_session_state() -> None:
         "upload_preview": None,
         "cleaning_report": None,
         "cleaned_path": None,
+        "staged_filepath": None,
+        "last_staged_id": None,
     }
     for key, value in defaults.items():
         if key not in st.session_state:
             st.session_state[key] = value
+
+
+def upload_file_id(uploaded_file) -> str:
+    size = getattr(uploaded_file, "size", None)
+    if size is None:
+        try:
+            size = len(uploaded_file.getvalue())
+        except Exception:
+            size = "unknown"
+    return f"{uploaded_file.name}:{size}"
 
 
 def save_uploaded_file(uploaded_file, upload_folder: Path) -> Path:
@@ -36,43 +48,63 @@ def save_uploaded_file(uploaded_file, upload_folder: Path) -> Path:
 
     upload_folder.mkdir(parents=True, exist_ok=True)
     filepath = upload_folder / filename
-    filepath.write_bytes(uploaded_file.getbuffer())
+    filepath.write_bytes(uploaded_file.getvalue())
     return filepath
 
 
-def process_upload(uploaded_file) -> bool:
-    """Save, preview, and clean an uploaded file. Returns True on success."""
-    file_id = f"{uploaded_file.name}:{uploaded_file.size}"
-    if st.session_state.get("last_upload_id") == file_id:
-        return bool(st.session_state.get("cleaned_path"))
+def _clear_clean_results() -> None:
+    st.session_state["cleaning_report"] = None
+    st.session_state["cleaned_path"] = None
 
-    try:
-        filepath = save_uploaded_file(uploaded_file, config.UPLOAD_FOLDER)
-        preview = preview_excel(filepath)
 
-        if not preview.get("success"):
-            st.session_state["upload_preview"] = None
-            st.session_state["cleaning_report"] = None
-            st.session_state["cleaned_path"] = None
-            st.session_state["last_upload_id"] = None
-            return False
+def stage_upload(uploaded_file) -> bool:
+    """Save the file and build a preview. Does not run cleaning."""
+    filepath = save_uploaded_file(uploaded_file, config.UPLOAD_FOLDER)
+    preview = preview_excel(filepath)
 
-        cleaning_report = clean_sales_file(filepath, config.DATA_FOLDER)
-        st.session_state["upload_preview"] = preview
-        st.session_state["cleaning_report"] = cleaning_report
+    st.session_state["staged_filepath"] = str(filepath)
 
-        if not cleaning_report.get("success"):
-            st.session_state["cleaned_path"] = None
-            st.session_state["last_upload_id"] = None
-            return False
+    st.session_state["upload_preview"] = preview
+    if not preview.get("success"):
+        _clear_clean_results()
+        return False
+    _clear_clean_results()
+    return True
 
-        st.session_state["cleaned_path"] = config.DATA_FOLDER / cleaning_report["cleaned_filename"]
-        st.session_state["last_upload_id"] = file_id
-        return True
 
-    except UploadError:
-        st.session_state["last_upload_id"] = None
-        raise
+def clean_staged_upload() -> bool:
+    """Clean the file saved by :func:`stage_upload`. Returns True on success."""
+    staged = st.session_state.get("staged_filepath")
+    if not staged:
+        raise UploadError("Upload a file first, then click Clean file.")
+
+    filepath = Path(staged)
+    if not filepath.exists():
+        raise UploadError("The uploaded file is no longer available. Please upload it again.")
+
+    preview = st.session_state.get("upload_preview")
+    if not preview or not preview.get("success"):
+        raise UploadError("Fix the upload preview issues before cleaning.")
+
+    cleaning_report = clean_sales_file(filepath, config.DATA_FOLDER)
+    st.session_state["cleaning_report"] = cleaning_report
+
+    if not cleaning_report.get("success"):
+        st.session_state["cleaned_path"] = None
+        return False
+
+    st.session_state["cleaned_path"] = config.DATA_FOLDER / cleaning_report["cleaned_filename"]
+    return True
+
+
+def handle_new_upload(uploaded_file) -> None:
+    """Stage a newly selected file; skip work if it is already staged."""
+    file_id = upload_file_id(uploaded_file)
+    if st.session_state.get("last_staged_id") == file_id:
+        return
+
+    st.session_state["last_staged_id"] = file_id
+    stage_upload(uploaded_file)
 
 
 def require_cleaned_path() -> Path:

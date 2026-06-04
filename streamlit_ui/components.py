@@ -79,6 +79,113 @@ def notice_card(message: str) -> None:
     )
 
 
+def smart_forecast_panel(forecast_report: dict[str, Any]) -> None:
+    """Render Smart Forecast summary aligned with the Flask forecast page."""
+    explanation = forecast_report.get("forecast_explanation") or ""
+    chosen = forecast_report.get("chosen_method_display_name")
+    focus = forecast_report.get("product_focus") or {}
+    summary = forecast_report.get("summary") or {}
+
+    if forecast_report.get("view_mode") == "product_journey" and focus:
+        confidence = focus.get("forecast_confidence", "N/A")
+        confidence_detail = focus.get("forecast_confidence_detail") or ""
+    else:
+        confidence = summary.get("forecast_confidence", "N/A")
+        confidence_detail = summary.get("forecast_confidence_detail") or ""
+
+    confidence_html = f"<strong>{html.escape(str(confidence))}</strong>"
+    if confidence_detail:
+        confidence_html += (
+            f' <span class="muted">· {html.escape(str(confidence_detail))}</span>'
+        )
+
+    method_html = ""
+    if chosen:
+        method_html = (
+            '<div class="smart-forecast-meta-item">'
+            "<dt>Method in use</dt>"
+            f"<dd><strong>{html.escape(chosen)}</strong></dd>"
+            "</div>"
+        )
+
+    pills = forecast_report.get("smart_forecast_methods_tested") or []
+    pills_html = ""
+    if pills:
+        pill_items = "".join(
+            f'<li class="smart-method-pill{" is-active" if chosen == item["label"] else ""}">'
+            f'{html.escape(item["label"])}</li>'
+            for item in pills
+        )
+        pills_html = (
+            '<p class="muted chart-caption smart-methods-caption">'
+            "Methods compared when enough history is available:</p>"
+            f'<ul class="smart-method-pills" aria-label="Forecast methods tested">{pill_items}</ul>'
+        )
+
+    render_html(
+        f'<section class="dashboard-card smart-forecast-card">'
+        f'<div class="smart-forecast-header">'
+        f"<h2>Smart Forecast</h2>"
+        f'<span class="smart-forecast-badge">Automatic</span>'
+        f"</div>"
+        f'<p class="summary-text smart-forecast-explanation">{html.escape(explanation)}</p>'
+        f'<dl class="smart-forecast-meta">'
+        f"{method_html}"
+        f'<div class="smart-forecast-meta-item">'
+        f"<dt>Confidence</dt><dd>{confidence_html}</dd>"
+        f"</div>"
+        f'<div class="smart-forecast-meta-item">'
+        f"<dt>Sales history</dt>"
+        f'<dd>{int(forecast_report.get("history_months", 0))} months in this view</dd>'
+        f"</div>"
+        f"</dl>"
+        f"{pills_html}"
+        f"</section>"
+    )
+
+
+def method_comparison_panel(comparison: dict[str, Any] | None) -> None:
+    """Collapsible holdout comparison table for Smart Forecast."""
+    if not comparison:
+        return
+
+    rows_html = []
+    for row in comparison.get("rows", []):
+        row_class = "method-comparison-winner" if row.get("is_winner") else ""
+        name = row["display_name"]
+        if row.get("is_winner"):
+            name = f"{name} (selected)"
+        mape = f'{row["mape"]}%' if row.get("mape") is not None else "N/A"
+        rows_html.append(
+            f'<tr class="{row_class}">'
+            f'<td>{html.escape(str(row["rank"]))}</td>'
+            f"<td>{html.escape(name)}</td>"
+            f'<td>{html.escape(str(row["mae"]))}</td>'
+            f'<td>{html.escape(str(row["rmse"]))}</td>'
+            f"<td>{html.escape(mape)}</td>"
+            f"</tr>"
+        )
+
+    render_html(
+        f'<details class="dashboard-card method-comparison-details" open>'
+        f'<summary class="method-comparison-summary">'
+        f"How Smart Forecast chose "
+        f'<span class="method-comparison-summary-hint">Holdout test · lower error is better</span>'
+        f"</summary>"
+        f'<p class="muted chart-caption">'
+        f'Each method was scored on the last {comparison["holdout_months"]} months of sales. '
+        f'Training used {comparison["train_months"]} months '
+        f'({html.escape(comparison["train_period_start"])} to '
+        f'{html.escape(comparison["train_period_end"])}). '
+        f'Smart Forecast selected <strong>{html.escape(comparison["chosen_display_name"])}</strong>.'
+        f"</p>"
+        f'<div class="table-wrap"><table class="data-table method-comparison-table">'
+        f"<thead><tr><th>Rank</th><th>Method</th><th>MAE</th><th>RMSE</th><th>MAPE</th></tr></thead>"
+        f'<tbody>{"".join(rows_html)}</tbody></table></div>'
+        f"</details>"
+    )
+
+
 def section_card(title: str, caption: str | None = None, highlight: bool = False) -> None:
     classes = "dashboard-card"
     if highlight:

@@ -3,33 +3,37 @@
 {% block title %}Home | SalphaPredict{% endblock %}
 
 {% block content %}
-<section class="hero section-black">
+<section class="hero section-black reveal-section" style="--reveal-delay: 0ms;">
     <div class="hero-content">
         <p class="eyebrow">Salpha Energy</p>
-        <h1 class="h1-large">Product sales insights</h1>
+        <h1 class="h1-large">Forecast Demand. Plan. Stock. </h1>
         <p class="lead">
             Upload your product sales file, see what sells most, what makes the most money,
             and plan stock with clearer numbers.
         </p>
         <a class="btn btn-primary" href="{{ url_for('upload') }}">Upload sales data</a>
+        <a class="scroll-cue" href="#features" aria-label="Scroll to features">
+            <span class="scroll-cue-wheel" aria-hidden="true"></span>
+            <span>Scroll</span>
+        </a>
     </div>
 </section>
 
-<section class="feature-grid">
-    <article class="feature-card">
-        <h2>Upload and clean</h2>
-        <p>Import Excel sales files and prepare them for analysis.</p>
+<section id="features" class="feature-grid">
+    <article class="feature-card hover-lift reveal-section" style="--reveal-delay: 40ms;">
+        <h2>Upload and Clean</h2>
+        <p>Import your Excel sales files and prepare them for analysis.</p>
     </article>
-    <article class="feature-card">
-        <h2>Sales insights</h2>
-        <p>Identify best-selling products, slow movers, and demand trends.</p>
+    <article class="feature-card hover-lift reveal-section" style="--reveal-delay: 140ms;">
+        <h2>Sales Insights</h2>
+        <p>Identify best selling products, slow movers and discover your main revenue drivers.</p>
     </article>
-    <article class="feature-card">
-        <h2>Forecast demand</h2>
-        <p>Estimate future product demand to support planning decisions.</p>
+    <article class="feature-card hover-lift reveal-section" style="--reveal-delay: 200ms;">
+        <h2>Smart Forecast</h2>
+        <p>Compare forecast methods on your sales history and use the most accurate one automatically.</p>
     </article>
-    <article class="feature-card">
-        <h2>Stock recommendations</h2>
+    <article class="feature-card hover-lift reveal-section" style="--reveal-delay: 260ms;">
+        <h2>Stock Advice</h2>
         <p>Generate practical inventory guidance and trend alerts.</p>
     </article>
 </section>

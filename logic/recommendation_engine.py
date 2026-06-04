@@ -6,10 +6,8 @@ from pathlib import Path
 
 import pandas as pd
 
+from logic.forecast_methods import ForecastError, MIN_HISTORY_MONTHS, _fit_linear_forecast
 from logic.forecasting_engine import (
-    MIN_HISTORY_MONTHS,
-    ForecastError,
-    _fit_linear_forecast,
     _trend_label,
     _trend_text,
     prepare_monthly_product_series,

@@ -308,6 +308,14 @@ def clean_sales_file(filepath: Path, output_folder: Path) -> dict:
     cleaned_path = output_folder / cleaned_name
     cleaned_df.to_csv(cleaned_path, index=False)
 
+    actuals_update: dict[str, int] = {}
+    try:
+        from logic.forecast_tracking import update_forecast_actuals
+
+        actuals_update = update_forecast_actuals(cleaned_df)
+    except Exception:
+        actuals_update = {}
+
     return {
         "success": True,
         "filename": filepath.name,

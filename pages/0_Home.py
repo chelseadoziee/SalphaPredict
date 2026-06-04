@@ -14,7 +14,7 @@ render_html(
     '<section class="hero section-black hero-streamlit">'
     '<div class="hero-content">'
     '<p class="eyebrow">Salpha Energy</p>'
-    '<h1 class="h1-large">Demand Predi</h1>'
+    '<h1 class="h1-large">Forecast Demand. Plan. Stock.</h1>'
     '<p class="lead">'
     "Upload your product sales file, see what sells most, what makes the most money, "
     "and plan stock with clearer numbers."
@@ -29,7 +29,11 @@ feature_grid(
     [
         ("Upload and clean", "Import Excel sales files and prepare them for analysis."),
         ("Sales insights", "Identify best-selling products, slow movers, and demand trends."),
-        ("Forecast demand", "Estimate future product demand to support planning decisions."),
+        (
+            "Smart Forecast",
+            "Compare Trend, Recent Sales, Smooth Trend, and Pattern forecasts; "
+            "the best method is chosen for you.",
+        ),
         ("Stock recommendations", "Generate practical inventory guidance and trend alerts."),
     ]
 )

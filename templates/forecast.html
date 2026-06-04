@@ -2,11 +2,13 @@
 
 {% block title %}Sales Forecast | SalphaPredict{% endblock %}
 
+{% block body_class %}page-dashboard{% endblock %}
+
 {% block content %}
-<section class="page-header">
+<section class="page-header reveal-section is-visible">
     <h1 class="h1-page">Sales Forecast</h1>
     <p>
-        A simple look at what products may sell next based on uploaded sales data.
+        See what may sell next. SalphaPredict compares forecast methods on your sales history and uses the most accurate one automatically.
         Source: <strong>{{ forecast.source_file }}</strong>
         ({{ forecast.history_range.start }} to {{ forecast.history_range.end }}).
     </p>
@@ -14,7 +16,14 @@
 
 <section class="dashboard-card forecast-controls">
     <h2>Forecast settings</h2>
-    <p class="muted chart-caption">Choose how far ahead to look. Product filter applies to all products for now.</p>
+    <p class="muted chart-caption">
+        Choose how far ahead to look and optionally focus on one product.
+        {% if forecast.selected_product %}
+        Viewing <strong>{{ forecast.selected_product }}</strong> only.
+        {% else %}
+        Viewing <strong>all products</strong> combined.
+        {% endif %}
+    </p>
     <form class="forecast-controls-form" method="GET" action="{{ url_for('forecast') }}">
         <label class="control-field">
             <span class="control-label">Forecast period</span>
@@ -28,13 +37,122 @@
         </label>
         <label class="control-field">
             <span class="control-label">Product filter</span>
-            <select class="control-select" disabled>
-                <option>{{ forecast.controls.product_filter }}</option>
+            <select name="product" class="control-select">
+                {% for option in forecast.controls.product_options %}
+                <option value="{{ option.value }}" {% if option.value == forecast.controls.selected_product %}selected{% endif %}>
+                    {{ option.label }}
+                </option>
+                {% endfor %}
             </select>
         </label>
         <button class="btn btn-primary" type="submit">Update forecast</button>
     </form>
 </section>
+
+{% if forecast.is_smart_forecast %}
+{% include "partials/smart_forecast_panel.html" %}
+{% endif %}
+
+{% if forecast.view_mode == 'product_journey' and forecast.product_focus %}
+{% set focus = forecast.product_focus %}
+<section class="kpi-grid product-journey-kpis">
+    <article class="kpi-card">
+        <p class="kpi-label">Expected products sold</p>
+        <p class="kpi-value">{{ focus.expected_products_sold }}</p>
+        <p class="kpi-sub">{{ forecast.forecast_period_label }}</p>
+    </article>
+    <article class="kpi-card">
+        <p class="kpi-label">Expected money made</p>
+        <p class="kpi-value kpi-value-money" {% if focus.expected_money_made is not none %}title="{{ focus.expected_money_made | naira_full }}"{% endif %}>
+            {% if focus.expected_money_made is not none %}
+                {{ focus.expected_money_made | naira_compact }}
+            {% else %}
+                N/A
+            {% endif %}
+        </p>
+    </article>
+    <article class="kpi-card">
+        <p class="kpi-label">Expected profit</p>
+        <p class="kpi-value kpi-value-money" {% if focus.expected_profit is not none %}title="{{ focus.expected_profit | naira_full }}"{% endif %}>
+            {% if focus.has_profit and focus.expected_profit is not none %}
+                {{ focus.expected_profit | naira_compact }}
+            {% else %}
+                N/A
+            {% endif %}
+        </p>
+    </article>
+    <article class="kpi-card">
+        <p class="kpi-label">Forecast confidence</p>
+        <p class="kpi-value">{{ focus.forecast_confidence }}</p>
+        <p class="kpi-sub">{{ focus.forecast_confidence_detail }}</p>
+    </article>
+    <article class="kpi-card">
+        <p class="kpi-label">Restock status</p>
+        <p class="kpi-value kpi-value-text">{{ focus.restock_status }}</p>
+    </article>
+    <article class="kpi-card">
+        <p class="kpi-label">Trend direction</p>
+        <p class="kpi-value trend-{{ focus.trend }}">{{ focus.trend_direction }}</p>
+    </article>
+</section>
+
+<section class="dashboard-card journey-chart-card">
+    <div class="journey-chart-header">
+        <div>
+            <h2>Forecast journey</h2>
+            <p class="muted chart-caption">
+                Where <strong>{{ focus.product }}</strong> has been, where it is now, and where it may go next.
+                {% if forecast.chosen_method_display_name %}
+                Smart Forecast is using <strong>{{ forecast.chosen_method_display_name }}</strong>.
+                {% endif %}
+            </p>
+        </div>
+        <ul class="journey-legend" aria-label="Chart legend">
+            <li><span class="journey-legend-swatch journey-legend-past"></span> Past sales</li>
+            <li><span class="journey-legend-swatch journey-legend-forecast"></span> Forecast</li>
+            <li><span class="journey-legend-swatch journey-legend-now"></span> Now</li>
+        </ul>
+    </div>
+    <div id="forecast-journey-chart" class="chart journey-chart"></div>
+</section>
+
+<section class="dashboard-grid two-col financial-summary-grid">
+    <article class="dashboard-card">
+        <h2>Revenue outlook</h2>
+        <p class="muted chart-caption">Money made for {{ focus.product }} over {{ forecast.forecast_period_label | lower }}.</p>
+        {% if focus.expected_money_made is not none %}
+        <p class="journey-summary-value kpi-value-money">{{ focus.expected_money_made | naira_compact }}</p>
+        <p class="summary-text">Last month sold {{ focus.last_month_sold }} units. Next month may reach about {{ focus.next_month_forecast }} units.</p>
+        {% else %}
+        <p class="muted">Revenue forecast is not available for this file.</p>
+        {% endif %}
+    </article>
+    <article class="dashboard-card">
+        <h2>Profit outlook</h2>
+        <p class="muted chart-caption">Expected profit for {{ focus.product }} over {{ forecast.forecast_period_label | lower }}.</p>
+        {% if focus.has_profit and focus.expected_profit is not none %}
+        <p class="journey-summary-value kpi-value-money">{{ focus.expected_profit | naira_compact }}</p>
+        <p class="summary-text">Use this alongside the profit and loss page when reviewing margins.</p>
+        {% else %}
+        <p class="muted">Profit forecast is not available for this file.</p>
+        {% endif %}
+    </article>
+</section>
+
+<section class="dashboard-card restock-recommendation-card">
+    <h2>Restock recommendation</h2>
+    <p class="summary-text">{{ focus.restock_recommendation }}</p>
+    <p class="muted chart-caption">Suggested action: {{ focus.suggested_action }}</p>
+</section>
+
+<section class="dashboard-card insight-summary">
+    <h2>What this could mean</h2>
+    {% for paragraph in forecast.what_this_means %}
+    <p class="summary-text">{{ paragraph }}</p>
+    {% endfor %}
+</section>
+
+{% else %}
 
 <section class="kpi-grid">
     <article class="kpi-card">
@@ -48,7 +166,7 @@
             {% if forecast.summary.expected_money_made is not none %}
                 {{ forecast.summary.expected_money_made | naira_compact }}
             {% else %}
-                —
+                N/A
             {% endif %}
         </p>
     </article>
@@ -58,7 +176,7 @@
             {% if forecast.summary.has_profit and forecast.summary.expected_profit is not none %}
                 {{ forecast.summary.expected_profit | naira_compact }}
             {% else %}
-                —
+                N/A
             {% endif %}
         </p>
     </article>
@@ -153,14 +271,14 @@
                         {% if row.expected_money_made is not none %}
                             {{ row.expected_money_made | naira_compact }}
                         {% else %}
-                            —
+                            N/A
                         {% endif %}
                     </td>
                     <td>
                         {% if row.expected_profit is not none %}
                             {{ row.expected_profit | naira_compact }}
                         {% else %}
-                            —
+                            N/A
                         {% endif %}
                     </td>
                     <td><span class="priority-badge priority-{{ 'high' if row.suggested_action == 'Restock regularly' else ('medium' if row.suggested_action in ['Track closely', 'Keep stable'] else 'low') }}">{{ row.suggested_action }}</span></td>
@@ -178,7 +296,7 @@
         {% if forecast.stock_advice.restock_soon %}
         <ul class="stock-advice-list">
             {% for row in forecast.stock_advice.restock_soon %}
-            <li><strong>{{ row.product }}</strong> — {{ row.suggested_action }} (about {{ row.expected_sold }} units)</li>
+            <li><strong>{{ row.product }}</strong>: {{ row.suggested_action }} (about {{ row.expected_sold }} units)</li>
             {% endfor %}
         </ul>
         {% else %}
@@ -192,7 +310,7 @@
         {% if forecast.stock_advice.track_closely %}
         <ul class="stock-advice-list">
             {% for row in forecast.stock_advice.track_closely %}
-            <li><strong>{{ row.product }}</strong> — {{ row.suggested_action }} (about {{ row.expected_sold }} units)</li>
+            <li><strong>{{ row.product }}</strong>: {{ row.suggested_action }} (about {{ row.expected_sold }} units)</li>
             {% endfor %}
         </ul>
         {% else %}
@@ -206,7 +324,7 @@
         {% if forecast.stock_advice.watch_list %}
         <ul class="stock-advice-list">
             {% for row in forecast.stock_advice.watch_list %}
-            <li><strong>{{ row.product }}</strong> — {{ row.suggested_action }}</li>
+            <li><strong>{{ row.product }}</strong>: {{ row.suggested_action }}</li>
             {% endfor %}
         </ul>
         {% else %}
@@ -214,6 +332,8 @@
         {% endif %}
     </article>
 </section>
+
+{% endif %}
 
 <script id="forecast-data" type="application/json">{{ chart_data | safe }}</script>
 <script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>

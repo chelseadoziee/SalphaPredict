@@ -49,7 +49,7 @@
         </p>
     </article>
     <article class="kpi-card">
-        <p class="kpi-label">Loss-making products</p>
+        <p class="kpi-label">Loss making products</p>
         <p class="kpi-value">{{ analysis.summary.loss_making_products }}</p>
     </article>
 </section>
@@ -92,7 +92,7 @@
 <section class="dashboard-card table-section">
     <h2>Product profit &amp; loss overview</h2>
     <p class="muted chart-caption">
-        All products with profit data — gross profit, loss, and net result for each one.
+        All products with profit data: gross profit, loss, and net result for each one.
     </p>
     <div class="table-wrap">
         <table class="data-table">
@@ -117,14 +117,14 @@
                         {% if row.gross_profit %}
                             ₦{{ "{:,.2f}".format(row.gross_profit) }}
                         {% else %}
-                            —
+                            N/A
                         {% endif %}
                     </td>
                     <td class="{% if row.loss %}trend-down{% endif %}">
                         {% if row.loss %}
                             ₦{{ "{:,.2f}".format(row.loss) }}
                         {% else %}
-                            —
+                            N/A
                         {% endif %}
                     </td>
                     <td>₦{{ "{:,.2f}".format(row.net_result) }}</td>
@@ -138,9 +138,9 @@
 
 {% if analysis.loss_making_products %}
 <section class="dashboard-card table-section highlight-card">
-    <h2>Loss-making products</h2>
+    <h2>Loss making products</h2>
     <p class="muted chart-caption">
-        Products where total cost was higher than money made — review pricing or costs for these.
+        Products where total cost was higher than money made. Review pricing or costs for these.
     </p>
     <div class="table-wrap">
         <table class="data-table">
@@ -172,7 +172,7 @@
 <section class="dashboard-card table-section">
     <h2>Highest margin products</h2>
     <p class="muted chart-caption">
-        Products with the strongest profit margin — useful when comparing value per sale.
+        Products with the strongest profit margin, useful when comparing value per sale.
     </p>
     <div class="table-wrap">
         <table class="data-table">

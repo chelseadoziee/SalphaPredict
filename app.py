@@ -120,7 +120,13 @@ def forecast():
     if period not in (1, 3, 6):
         period = 1
 
-    forecast_report = forecast_sales_file(cleaned_path, forecast_periods=period)
+    product = request.args.get("product", "").strip() or None
+
+    forecast_report = forecast_sales_file(
+        cleaned_path,
+        forecast_periods=period,
+        product=product,
+    )
     if not forecast_report.get("success"):
         flash(forecast_report.get("error", "Could not forecast from the cleaned sales data."), "error")
         return redirect(url_for("upload"))

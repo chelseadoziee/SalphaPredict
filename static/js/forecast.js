@@ -25,6 +25,14 @@
         return `₦${Math.round(amount).toLocaleString()}`;
     }
 
+    function formatNairaFull(value) {
+        const amount = Number(value);
+        if (Number.isNaN(amount)) {
+            return "N/A";
+        }
+        return `₦${amount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+    }
+
     function buildMoneyAxis(values, title) {
         const clean = values.filter((value) => value != null && !Number.isNaN(value));
         const max = clean.length ? Math.max(...clean) : 0;
@@ -72,6 +80,159 @@
     }
 
     const plotConfig = { responsive: true, displayModeBar: false };
+
+    function buildJourneyHoverText(point, productName) {
+        const lines = [`Month: ${point.month}`, `Product: ${productName}`];
+        if (point.is_forecast) {
+            lines.push(`Expected units sold: ${point.units}`);
+        } else {
+            lines.push(`Actual units sold: ${point.units}`);
+        }
+        if (point.money != null) {
+            const moneyLabel = point.is_forecast ? "Expected revenue" : "Revenue";
+            lines.push(`${moneyLabel}: ${formatNairaFull(point.money)}`);
+        }
+        if (point.profit != null) {
+            const profitLabel = point.is_forecast ? "Expected profit" : "Profit";
+            lines.push(`${profitLabel}: ${formatNairaFull(point.profit)}`);
+        }
+        lines.push(`Trend status: ${point.trend_status}`);
+        lines.push(`Restock advice: ${point.restock_advice}`);
+        if (point.marker_label) {
+            lines.push(`Marker: ${point.marker_label}`);
+        }
+        return lines.join("<br>");
+    }
+
+    function plotProductJourney(journey) {
+        const elementId = "forecast-journey-chart";
+        const element = document.getElementById(elementId);
+        if (!element || !journey || !journey.points || !journey.points.length) {
+            return;
+        }
+
+        const productName = journey.product;
+        const points = journey.points;
+        const historyPoints = points.filter((point) => !point.is_forecast);
+        const forecastPoints = points.filter((point) => point.is_forecast);
+        const lastHistory = historyPoints[historyPoints.length - 1];
+
+        const historyX = historyPoints.map((point) => point.month);
+        const historyY = historyPoints.map((point) => point.units);
+        const forecastX = [lastHistory.month].concat(forecastPoints.map((point) => point.month));
+        const forecastY = [lastHistory.units].concat(forecastPoints.map((point) => point.units));
+
+        const markerPoints = points.filter((point) => point.marker);
+        const markerColors = {
+            peak: "#000000",
+            lowest: "#393d46",
+            now: "#ffdd00",
+            forecast_start: "#ffdd00",
+            restock: "#000000",
+            forecast_start_restock: "#ffdd00",
+        };
+
+        const traces = [
+            {
+                x: historyX,
+                y: historyY,
+                type: "scatter",
+                mode: "lines+markers",
+                name: "Past sales",
+                line: { color: "#000000", width: 3, shape: "spline" },
+                marker: { color: "#000000", size: 8, line: { color: "#ffffff", width: 1.5 } },
+                hovertext: historyPoints.map((point) => buildJourneyHoverText(point, productName)),
+                hoverinfo: "text",
+            },
+            {
+                x: forecastX,
+                y: forecastY,
+                type: "scatter",
+                mode: "lines+markers",
+                name: "Forecast",
+                line: { color: "#ffdd00", width: 3, dash: "dash", shape: "spline" },
+                marker: { color: "#ffdd00", size: 9, line: { color: "#000000", width: 1.5 } },
+                hovertext: [lastHistory]
+                    .concat(forecastPoints)
+                    .map((point) => buildJourneyHoverText(point, productName)),
+                hoverinfo: "text",
+            },
+        ];
+
+        if (markerPoints.length) {
+            traces.push({
+                x: markerPoints.map((point) => point.month),
+                y: markerPoints.map((point) => point.units),
+                type: "scatter",
+                mode: "markers+text",
+                name: "Markers",
+                text: markerPoints.map((point) => point.marker_label || ""),
+                textposition: "top center",
+                textfont: { size: 11, color: "#000000" },
+                hovertext: markerPoints.map((point) =>
+                    buildJourneyHoverText(point, productName)
+                ),
+                hoverinfo: "text",
+                marker: {
+                    size: 14,
+                    color: markerPoints.map(
+                        (point) => markerColors[point.marker] || "#000000"
+                    ),
+                    line: { color: "#ffffff", width: 2 },
+                    symbol: "diamond",
+                },
+                showlegend: false,
+            });
+        }
+
+        const shapes = [];
+        if (journey.forecast_start_month) {
+            shapes.push({
+                type: "line",
+                x0: journey.forecast_start_month,
+                x1: journey.forecast_start_month,
+                y0: 0,
+                y1: 1,
+                yref: "paper",
+                line: { color: "rgba(57, 61, 70, 0.35)", width: 2, dash: "dot" },
+            });
+        }
+
+        const allUnits = points.map((point) => point.units);
+        const yMax = Math.max(...allUnits, 1);
+
+        Plotly.newPlot(
+            elementId,
+            traces,
+            baseLayout({
+                height: 420,
+                margin: { t: 28, r: 20, b: 56, l: 56 },
+                xaxis: {
+                    title: "Month",
+                    automargin: true,
+                    showgrid: true,
+                    gridcolor: "rgba(0,0,0,0.06)",
+                },
+                yaxis: {
+                    title: "Units sold",
+                    automargin: true,
+                    rangemode: "tozero",
+                    range: [0, yMax * 1.18],
+                    showgrid: true,
+                    gridcolor: "rgba(0,0,0,0.06)",
+                },
+                shapes,
+                legend: {
+                    orientation: "h",
+                    y: 1.08,
+                    x: 0,
+                    xanchor: "left",
+                },
+                hovermode: "closest",
+            }),
+            plotConfig
+        );
+    }
 
     function plotHistoryAndForecast(elementId, series, yTitle, isMoney) {
         const allLabels = series.history_labels.concat(series.forecast_labels);
@@ -149,6 +310,11 @@
             }),
             plotConfig
         );
+    }
+
+    if (charts.journey_line) {
+        plotProductJourney(charts.journey_line);
+        return;
     }
 
     if (charts.products_sold) {

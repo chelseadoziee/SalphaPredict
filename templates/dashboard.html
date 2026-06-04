@@ -2,8 +2,10 @@
 
 {% block title %}Product sales dashboard | SalphaPredict{% endblock %}
 
+{% block body_class %}page-dashboard{% endblock %}
+
 {% block content %}
-<section class="page-header">
+<section class="page-header reveal-section is-visible">
     <h1 class="h1-page">Salpha Product Insights</h1>
     <p>
         Summary from uploaded product data: <strong>{{ analysis.source_file }}</strong>
@@ -22,7 +24,7 @@
             {% if analysis.summary.total_revenue is not none %}
                 {{ analysis.summary.total_revenue | naira_compact }}
             {% else %}
-                —
+                N/A
             {% endif %}
         </p>
     </article>
@@ -91,7 +93,7 @@
 <section class="dashboard-card table-section">
     <h2>Product overview</h2>
     <p class="muted chart-caption">
-        All products in one place — how many were sold and how much money each one made.
+        All products in one place: how many were sold and how much money each one made.
     </p>
     <div class="table-wrap">
         <table class="data-table">
@@ -117,14 +119,14 @@
                             {% if row.revenue is not none %}
                                 ₦{{ "{:,.2f}".format(row.revenue) }}
                             {% else %}
-                                —
+                                N/A
                             {% endif %}
                         </td>
                         <td>
                             {% if row.revenue_share_pct is not none %}
                                 {{ row.revenue_share_pct }}%
                             {% else %}
-                                —
+                                N/A
                             {% endif %}
                         </td>
                     {% endif %}
@@ -136,7 +138,7 @@
 </section>
 
 <section class="dashboard-card table-section highlight-card">
-    <h2>High-value products</h2>
+    <h2>High value products</h2>
     <p class="muted chart-caption">
         These products made strong money, even when some sold fewer units.
     </p>
@@ -164,7 +166,7 @@
         </table>
     </div>
     {% else %}
-    <p class="muted">No high-value products were identified in the current data.</p>
+    <p class="muted">No high value products were identified in the current data.</p>
     {% endif %}
 </section>
 

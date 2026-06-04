@@ -3,33 +3,47 @@
 {% block title %}Upload | SalphaPredict{% endblock %}
 
 {% block content %}
-<section class="page-header">
-    <h1 class="h1-page">Upload sales data</h1>
+<section class="page-header reveal-section hover-lift">
+    <h1 class="h1-page">Upload Your Sales Data </h1>
     <p>
-        Upload an Excel file to clean your product sales data and open the dashboard.
-        Supported formats: .xlsx and .xls.
+        Upload an Excel sales file and let SalphaPredict clean the data, unlock sales and profit insights, Smart Forecast demand planning, and stock advice.
     </p>
 </section>
 
-<section class="upload-panel">
+<section class="upload-panel reveal-section hover-lift" style="--reveal-delay: 60ms;">
     <form class="upload-form" method="POST" enctype="multipart/form-data">
         <label class="file-label" for="file">Choose Excel file</label>
         <input id="file" name="file" type="file" accept=".xlsx,.xls" required>
-        <button class="btn btn-primary" type="submit">Upload and clean</button>
+        <button class="btn btn-primary" type="submit">Upload and clean file</button>
     </form>
 </section>
 
+<details class="accordion reveal-section" style="--reveal-delay: 120ms;">
+    <summary>Before you upload</summary>
+    <div class="accordion-panel">
+        <p class="muted">
+            Use a product sales export with dates, product names, and quantities sold.
+            SalphaPredict will map common column names automatically when possible.
+        </p>
+        <ul class="fix-list">
+            <li>One row per sale or line item works best.</li>
+            <li>Remove blank sheets if your file has several tabs.</li>
+            <li>After cleaning, open Sales or Forecast from the navigation.</li>
+        </ul>
+    </div>
+</details>
+
 {% if cleaning_report and cleaning_report.success %}
-<section class="upload-panel upload-success">
-    <h2>Ready to view</h2>
+<section class="upload-panel upload-success reveal-section hover-lift is-visible" style="--reveal-delay: 0ms;">
+    <h2>Sales File Prepared</h2>
     <p>
         <strong>{{ preview.filename if preview else cleaning_report.cleaned_filename }}</strong>
-        was uploaded and cleaned successfully.
+        has been cleaned and is ready for analysis.
     </p>
-    <p class="muted">{{ cleaning_report.cleaned_rows }} rows are ready for analysis.</p>
-    <a class="btn btn-primary" href="{{ url_for('dashboard') }}">View product sales dashboard</a>
-    <a class="btn btn-secondary" href="{{ url_for('profit_loss') }}">View profit &amp; loss</a>
-    <a class="btn btn-secondary" href="{{ url_for('stock_advice') }}">View stock advice</a>
+    <p class="muted">{{ cleaning_report.cleaned_rows }} rows are have been cleaned.</p>
+    <a class="btn btn-primary" href="{{ url_for('dashboard') }}">View Sales Insights</a>
+    <a class="btn btn-secondary" href="{{ url_for('profit_loss') }}">View Profit &amp; Loss Analysis</a>
+    <a class="btn btn-secondary" href="{{ url_for('stock_advice') }}">View Stock Recommendations</a>
 </section>
 {% endif %}
 {% endblock %}

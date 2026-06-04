@@ -1,0 +1,92 @@
+{# Smart Forecast summary and optional holdout comparison (Flask). #}
+<section class="dashboard-card smart-forecast-card">
+    <div class="smart-forecast-header">
+        <h2>Smart Forecast</h2>
+        <span class="smart-forecast-badge">Automatic</span>
+    </div>
+    {% if forecast.forecast_explanation %}
+    <p class="summary-text smart-forecast-explanation">{{ forecast.forecast_explanation }}</p>
+    {% endif %}
+    <dl class="smart-forecast-meta">
+        {% if forecast.chosen_method_display_name %}
+        <div class="smart-forecast-meta-item">
+            <dt>Method in use</dt>
+            <dd><strong>{{ forecast.chosen_method_display_name }}</strong></dd>
+        </div>
+        {% endif %}
+        <div class="smart-forecast-meta-item">
+            <dt>Confidence</dt>
+            <dd>
+                {% if forecast.view_mode == 'product_journey' and forecast.product_focus %}
+                <strong>{{ forecast.product_focus.forecast_confidence }}</strong>
+                {% if forecast.product_focus.forecast_confidence_detail %}
+                <span class="muted"> · {{ forecast.product_focus.forecast_confidence_detail }}</span>
+                {% endif %}
+                {% else %}
+                <strong>{{ forecast.summary.forecast_confidence }}</strong>
+                {% if forecast.summary.forecast_confidence_detail %}
+                <span class="muted"> · {{ forecast.summary.forecast_confidence_detail }}</span>
+                {% endif %}
+                {% endif %}
+            </dd>
+        </div>
+        <div class="smart-forecast-meta-item">
+            <dt>Sales history</dt>
+            <dd>{{ forecast.history_months }} months in this view</dd>
+        </div>
+    </dl>
+    {% if forecast.smart_forecast_methods_tested %}
+    <p class="muted chart-caption smart-methods-caption">Methods compared when enough history is available:</p>
+    <ul class="smart-method-pills" aria-label="Forecast methods tested">
+        {% for method in forecast.smart_forecast_methods_tested %}
+        <li class="smart-method-pill{% if forecast.chosen_method_display_name == method.label %} is-active{% endif %}">{{ method.label }}</li>
+        {% endfor %}
+    </ul>
+    {% endif %}
+</section>
+
+{% if forecast.method_comparison %}
+<details class="dashboard-card method-comparison-details">
+    <summary class="method-comparison-summary">
+        How Smart Forecast chose
+        <span class="method-comparison-summary-hint">Holdout test · lower error is better</span>
+    </summary>
+    <p class="muted chart-caption">
+        Each method was scored on the last {{ forecast.method_comparison.holdout_months }} months of sales.
+        Training used {{ forecast.method_comparison.train_months }} months
+        ({{ forecast.method_comparison.train_period_start }} to {{ forecast.method_comparison.train_period_end }}).
+        Smart Forecast selected <strong>{{ forecast.method_comparison.chosen_display_name }}</strong>.
+    </p>
+    <div class="table-wrap">
+        <table class="data-table method-comparison-table">
+            <thead>
+                <tr>
+                    <th>Rank</th>
+                    <th>Method</th>
+                    <th>MAE</th>
+                    <th>RMSE</th>
+                    <th>MAPE</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for row in forecast.method_comparison.rows %}
+                <tr class="{% if row.is_winner %}method-comparison-winner{% endif %}">
+                    <td>{{ row.rank }}</td>
+                    <td>{{ row.display_name }}{% if row.is_winner %} (selected){% endif %}</td>
+                    <td>{{ row.mae }}</td>
+                    <td>{{ row.rmse }}</td>
+                    <td>{% if row.mape is not none %}{{ row.mape }}%{% else %}N/A{% endif %}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</details>
+{% elif forecast.is_smart_forecast %}
+<section class="dashboard-card notice-card smart-forecast-notice">
+    <p class="summary-text">
+        Method comparison appears after at least 7 months of sales history (4 months to train, 3 months to test).
+        Until then, Smart Forecast uses Trend Forecast as a reliable default.
+    </p>
+</section>
+{% endif %}

@@ -4,9 +4,10 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}SalphaPredict{% endblock %}</title>
+    <link rel="icon" href="{{ url_for('static', filename='favicon.svg') }}" type="image/svg+xml">
     <link rel="stylesheet" href="{{ url_for('static', filename='css/styles.css') }}">
 </head>
-<body>
+<body class="page-enter {% block body_class %}{% endblock %}">
     <header class="site-header">
         <div class="container header-content">
             <a class="brand" href="{{ url_for('index') }}">
@@ -44,8 +45,9 @@
 
     <footer class="site-footer">
         <div class="container">
-            <p>SalphaPredict &mdash; Demand intelligence for Salpha Energy</p>
+            <p>SalphaPredict. Demand intelligence for Salpha Energy</p>
         </div>
     </footer>
+    <script src="{{ url_for('static', filename='js/transitions.js') }}" defer></script>
 </body>
 </html>

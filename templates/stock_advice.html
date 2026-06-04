@@ -47,7 +47,7 @@
 
 <section class="dashboard-card table-section highlight-card">
     <h2>Priority restock</h2>
-    <p class="muted chart-caption">Top sellers and fast-moving products that should stay well stocked.</p>
+    <p class="muted chart-caption">Top sellers and fast moving products that should stay well stocked.</p>
     {% if advice.priority_restock %}
     <div class="table-wrap">
         <table class="data-table">
@@ -69,7 +69,7 @@
                         {% if row.next_month_forecast is not none %}
                             {{ row.next_month_forecast }}
                         {% else %}
-                            —
+                            N/A
                         {% endif %}
                     </td>
                     <td>{{ row.suggested_stock }}</td>
@@ -87,7 +87,7 @@
 {% if advice.watch_list %}
 <section class="dashboard-card table-section">
     <h2>Watch before restocking</h2>
-    <p class="muted chart-caption">Products where demand is falling or profit is weak — restock carefully.</p>
+    <p class="muted chart-caption">Products where demand is falling or profit is weak. Restock carefully.</p>
     <div class="table-wrap">
         <table class="data-table">
             <thead>
@@ -141,7 +141,7 @@
                         {% if row.next_month_forecast is not none %}
                             {{ row.next_month_forecast }}
                         {% else %}
-                            —
+                            N/A
                         {% endif %}
                     </td>
                     <td>{{ row.suggested_stock }}</td>

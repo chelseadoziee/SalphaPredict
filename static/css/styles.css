@@ -898,6 +898,7 @@ input[type="file"] {
 .method-comparison-details .chart-caption,
 .method-comparison-details .table-wrap {
     padding: 0 1.25rem 1.25rem;
+    overflow: visible;
 }
 
 .smart-forecast-notice {
@@ -910,6 +911,58 @@ input[type="file"] {
 
 .method-comparison-table tbody tr.method-comparison-winner td {
     font-weight: 600;
+}
+
+.method-comparison-table th.metric-help-header {
+    position: relative;
+    vertical-align: bottom;
+}
+
+.metric-help-trigger {
+    display: inline-block;
+    cursor: help;
+    border-bottom: 1px dotted rgba(255, 255, 255, 0.65);
+    line-height: 1.2;
+}
+
+.metric-help-trigger:focus {
+    outline: 2px solid var(--salpha-yellow);
+    outline-offset: 2px;
+}
+
+.metric-help-floating {
+    position: fixed;
+    z-index: 10000;
+    width: max-content;
+    max-width: 16rem;
+    padding: 0.55rem 0.7rem;
+    text-align: left;
+    font-size: 0.78rem;
+    font-weight: 400;
+    font-family: var(--font-body);
+    line-height: 1.45;
+    color: var(--salpha-black);
+    background: var(--salpha-yellow);
+    border: 1px solid var(--salpha-black);
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.18);
+    pointer-events: none;
+}
+
+.metric-help-floating[hidden] {
+    display: none !important;
+}
+
+.metric-help-floating-title {
+    display: block;
+    margin-bottom: 0.2rem;
+    font-size: 0.72rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+}
+
+.metric-help-floating-text {
+    display: block;
 }
 
 /* —— Dashboard KPIs —— */

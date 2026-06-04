@@ -1,0 +1,12 @@
+{# MAE / RMSE / MAPE header with hover help (see static/js/metric-tooltips.js). #}
+{% set help = metric %}
+<th class="metric-help-header" scope="col">
+    <span
+        class="metric-help-trigger"
+        tabindex="0"
+        data-metric-title="{{ help.title }}"
+        data-metric-text="{{ help.description }}"
+        title="{{ help.title }}. {{ help.description }}"
+        aria-label="{{ help.label }}: {{ help.title }}. {{ help.description }}"
+    >{{ help.label }}</span>
+</th>

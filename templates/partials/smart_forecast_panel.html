@@ -61,11 +61,14 @@
         <table class="data-table method-comparison-table">
             <thead>
                 <tr>
-                    <th>Rank</th>
-                    <th>Method</th>
-                    <th>MAE</th>
-                    <th>RMSE</th>
-                    <th>MAPE</th>
+                    <th scope="col">Rank</th>
+                    <th scope="col">Method</th>
+                    {% set metric = forecast.method_comparison.metric_help.mae %}
+                    {% include "partials/metric_help_th.html" %}
+                    {% set metric = forecast.method_comparison.metric_help.rmse %}
+                    {% include "partials/metric_help_th.html" %}
+                    {% set metric = forecast.method_comparison.metric_help.mape %}
+                    {% include "partials/metric_help_th.html" %}
                 </tr>
             </thead>
             <tbody>

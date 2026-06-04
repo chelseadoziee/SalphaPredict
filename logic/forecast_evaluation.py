@@ -5,8 +5,6 @@ from __future__ import annotations
 import pandas as pd
 
 from logic.forecast_methods import (
-    BACKEND_LINEAR_REGRESSION,
-    BACKEND_MOVING_AVERAGE,
     COMPARABLE_BACKEND_METHODS,
     FORECAST_METHOD_REGISTRY,
     HOLDOUT_MONTHS,
@@ -16,6 +14,31 @@ from logic.forecast_methods import (
     forecast_method_label,
     predict_quantity_series,
 )
+
+HOLDOUT_METRIC_HELP: dict[str, dict[str, str]] = {
+    "mae": {
+        "label": "MAE",
+        "title": "Average unit gap",
+        "description": (
+            "Shows how many units the forecast was usually off by. Lower is better."
+        ),
+    },
+    "rmse": {
+        "label": "RMSE",
+        "title": "Big miss score",
+        "description": (
+            "Shows whether the forecast made any larger mistakes. Lower is better."
+        ),
+    },
+    "mape": {
+        "label": "MAPE",
+        "title": "Average percentage error",
+        "description": (
+            "Shows how far the forecast was from real sales as a percentage. "
+            "Lower is better. Zero sales months are skipped."
+        ),
+    },
+}
 
 
 def compute_mae(actual: list[float], predicted: list[float]) -> float:
@@ -228,4 +251,5 @@ def format_method_comparison_for_ui(comparison: dict | None) -> dict | None:
         "winner_display_name": comparison["winner_display_name"],
         "chosen_display_name": comparison["winner_display_name"],
         "rows": rows,
+        "metric_help": HOLDOUT_METRIC_HELP,
     }

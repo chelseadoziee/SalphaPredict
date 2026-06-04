@@ -5,6 +5,7 @@ from typing import Any
 
 import streamlit as st
 
+import config
 from logic.formatters import format_naira_compact, format_naira_full
 
 
@@ -144,10 +145,41 @@ def smart_forecast_panel(forecast_report: dict[str, Any]) -> None:
     )
 
 
+def _metric_help_header_html(metric_key: str, metric_help: dict[str, dict[str, str]]) -> str:
+    help_info = metric_help[metric_key]
+    label = html.escape(help_info["label"])
+    title = html.escape(help_info["title"])
+    description = html.escape(help_info["description"])
+    aria = html.escape(f'{help_info["label"]}: {help_info["title"]}. {help_info["description"]}')
+    native_title = html.escape(f'{help_info["title"]}. {help_info["description"]}')
+    return (
+        f'<th class="metric-help-header" scope="col">'
+        f'<span class="metric-help-trigger" tabindex="0"'
+        f' data-metric-title="{title}" data-metric-text="{description}"'
+        f' title="{native_title}" aria-label="{aria}">{label}</span></th>'
+    )
+
+
+def _inject_metric_tooltip_script() -> None:
+    script_path = config.BASE_DIR / "static" / "js" / "metric-tooltips.js"
+    script_body = script_path.read_text(encoding="utf-8")
+    render_html(f"<script>{script_body}</script>")
+
+
 def method_comparison_panel(comparison: dict[str, Any] | None) -> None:
     """Collapsible holdout comparison table for Smart Forecast."""
     if not comparison:
         return
+
+    metric_help = comparison.get("metric_help")
+    if not metric_help:
+        from logic.forecast_evaluation import HOLDOUT_METRIC_HELP
+
+        metric_help = HOLDOUT_METRIC_HELP
+
+    metric_headers = "".join(
+        _metric_help_header_html(key, metric_help) for key in ("mae", "rmse", "mape")
+    )
 
     rows_html = []
     for row in comparison.get("rows", []):
@@ -180,10 +212,12 @@ def method_comparison_panel(comparison: dict[str, Any] | None) -> None:
         f'Smart Forecast selected <strong>{html.escape(comparison["chosen_display_name"])}</strong>.'
         f"</p>"
         f'<div class="table-wrap"><table class="data-table method-comparison-table">'
-        f"<thead><tr><th>Rank</th><th>Method</th><th>MAE</th><th>RMSE</th><th>MAPE</th></tr></thead>"
+        f'<thead><tr><th scope="col">Rank</th><th scope="col">Method</th>'
+        f"{metric_headers}</tr></thead>"
         f'<tbody>{"".join(rows_html)}</tbody></table></div>'
         f"</details>"
     )
+    _inject_metric_tooltip_script()
 
 
 def section_card(title: str, caption: str | None = None, highlight: bool = False) -> None:

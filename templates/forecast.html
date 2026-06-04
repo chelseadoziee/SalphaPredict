@@ -99,9 +99,10 @@
 <section class="dashboard-card journey-chart-card">
     <div class="journey-chart-header">
         <div>
-            <h2>Forecast journey</h2>
+            <h2>Sales Timeline</h2>
             <p class="muted chart-caption">
-                Where <strong>{{ focus.product }}</strong> has been, where it is now, and where it may go next.
+                Past sales leading into what is expected next for <strong>{{ focus.product }}</strong>.
+                The dotted line shows where the forecast begins.
                 {% if forecast.chosen_method_display_name %}
                 Smart Forecast is using <strong>{{ forecast.chosen_method_display_name }}</strong>.
                 {% endif %}
@@ -118,8 +119,8 @@
 
 <section class="dashboard-grid two-col financial-summary-grid">
     <article class="dashboard-card">
-        <h2>Revenue outlook</h2>
-        <p class="muted chart-caption">Money made for {{ focus.product }} over {{ forecast.forecast_period_label | lower }}.</p>
+        <h2>Revenue Estimate</h2>
+        <p class="muted chart-caption">Total revenue expected for {{ focus.product }} over the selected period.</p>
         {% if focus.expected_money_made is not none %}
         <p class="journey-summary-value kpi-value-money">{{ focus.expected_money_made | naira_compact }}</p>
         <p class="summary-text">Last month sold {{ focus.last_month_sold }} units. Next month may reach about {{ focus.next_month_forecast }} units.</p>
@@ -128,8 +129,8 @@
         {% endif %}
     </article>
     <article class="dashboard-card">
-        <h2>Profit outlook</h2>
-        <p class="muted chart-caption">Expected profit for {{ focus.product }} over {{ forecast.forecast_period_label | lower }}.</p>
+        <h2>Profit Estimate</h2>
+        <p class="muted chart-caption">How much profit {{ focus.product }} is expected to generate this period.</p>
         {% if focus.has_profit and focus.expected_profit is not none %}
         <p class="journey-summary-value kpi-value-money">{{ focus.expected_profit | naira_compact }}</p>
         <p class="summary-text">Use this alongside the profit and loss page when reviewing margins.</p>
@@ -146,7 +147,8 @@
 </section>
 
 <section class="dashboard-card insight-summary">
-    <h2>What this could mean</h2>
+    <h2>What the Forecast Is Telling You</h2>
+    <p class="muted chart-caption">A plain language summary of the key things this forecast suggests for your stock and sales planning.</p>
     {% for paragraph in forecast.what_this_means %}
     <p class="summary-text">{{ paragraph }}</p>
     {% endfor %}
@@ -196,7 +198,8 @@
 </section>
 
 <section class="dashboard-card insight-summary">
-    <h2>What this could mean</h2>
+    <h2>What the Forecast Is Telling You</h2>
+    <p class="muted chart-caption">A plain language summary of the key things this forecast suggests for your stock and sales planning.</p>
     {% for paragraph in forecast.what_this_means %}
     <p class="summary-text">{{ paragraph }}</p>
     {% endfor %}
@@ -204,53 +207,53 @@
 
 <section class="dashboard-grid charts-grid">
     <article class="dashboard-card chart-card">
-        <h2>Expected products sold</h2>
-        <p class="muted chart-caption">Past monthly sales and what may happen next.</p>
+        <h2>Sales Forecast</h2>
+        <p class="muted chart-caption">How many units were sold each month, plus what is expected ahead.</p>
         <div id="forecast-products-chart" class="chart"></div>
     </article>
 
     {% if forecast.charts.money_made %}
     <article class="dashboard-card chart-card">
-        <h2>Expected money made</h2>
-        <p class="muted chart-caption">Past monthly money made and what may happen next.</p>
+        <h2>Revenue Forecast</h2>
+        <p class="muted chart-caption">Monthly revenue so far, with an estimate of what is coming next.</p>
         <div id="forecast-money-chart" class="chart"></div>
     </article>
     {% endif %}
 
     {% if forecast.charts.profit %}
     <article class="dashboard-card chart-card">
-        <h2>Expected profit</h2>
-        <p class="muted chart-caption">Past monthly profit and what may happen next.</p>
+        <h2>Profit Forecast</h2>
+        <p class="muted chart-caption">How much profit was made each month and what to expect going forward.</p>
         <div id="forecast-profit-chart" class="chart"></div>
     </article>
     {% endif %}
 
     <article class="dashboard-card chart-card">
-        <h2>Expected sold by product</h2>
-        <p class="muted chart-caption">Which products may sell the most in the forecast period.</p>
+        <h2>Top Products by Units</h2>
+        <p class="muted chart-caption">The products forecast to sell the most next period.</p>
         <div id="forecast-product-units-chart" class="chart"></div>
     </article>
 
     {% if forecast.charts.product_money %}
     <article class="dashboard-card chart-card">
-        <h2>Expected money made by product</h2>
-        <p class="muted chart-caption">Which products may bring in the most money.</p>
+        <h2>Top Products by Revenue</h2>
+        <p class="muted chart-caption">The products expected to bring in the most money.</p>
         <div id="forecast-product-money-chart" class="chart"></div>
     </article>
     {% endif %}
 
     {% if forecast.charts.product_profit %}
     <article class="dashboard-card chart-card">
-        <h2>Expected profit by product</h2>
-        <p class="muted chart-caption">Which products may make the most profit.</p>
+        <h2>Top Products by Profit</h2>
+        <p class="muted chart-caption">The products likely to deliver the strongest profit.</p>
         <div id="forecast-product-profit-chart" class="chart"></div>
     </article>
     {% endif %}
 </section>
 
 <section class="dashboard-card table-section">
-    <h2>Product forecast</h2>
-    <p class="muted chart-caption">What each product may do in {{ forecast.forecast_period_label | lower }}.</p>
+    <h2>Product by Product Forecast</h2>
+    <p class="muted chart-caption">Units, revenue, and profit estimates for each product, with a suggested stock action.</p>
     <div class="table-wrap">
         <table class="data-table">
             <thead>
@@ -291,8 +294,8 @@
 
 <section class="dashboard-grid three-col">
     <article class="dashboard-card stock-advice-card">
-        <h2>Restock soon</h2>
-        <p class="muted chart-caption">Fast sellers that may need regular restocking.</p>
+        <h2>Restock Soon</h2>
+        <p class="muted chart-caption">Fast moving products that will likely need topping up before the period ends.</p>
         {% if forecast.stock_advice.restock_soon %}
         <ul class="stock-advice-list">
             {% for row in forecast.stock_advice.restock_soon %}
@@ -305,8 +308,8 @@
     </article>
 
     <article class="dashboard-card stock-advice-card">
-        <h2>Track closely</h2>
-        <p class="muted chart-caption">Products with rising demand worth watching.</p>
+        <h2>Rising Demand</h2>
+        <p class="muted chart-caption">Products with growing sales that are worth keeping a close eye on.</p>
         {% if forecast.stock_advice.track_closely %}
         <ul class="stock-advice-list">
             {% for row in forecast.stock_advice.track_closely %}
@@ -319,8 +322,8 @@
     </article>
 
     <article class="dashboard-card stock-advice-card">
-        <h2>Watch list</h2>
-        <p class="muted chart-caption">Products where demand may fall or profit is weak.</p>
+        <h2>Needs Attention</h2>
+        <p class="muted chart-caption">Products where demand is slowing or profit is thin. Worth reviewing.</p>
         {% if forecast.stock_advice.watch_list %}
         <ul class="stock-advice-list">
             {% for row in forecast.stock_advice.watch_list %}
@@ -337,5 +340,6 @@
 
 <script id="forecast-data" type="application/json">{{ chart_data | safe }}</script>
 <script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
+<script src="{{ url_for('static', filename='js/metric-tooltips.js') }}" defer></script>
 <script src="{{ url_for('static', filename='js/forecast.js') }}"></script>
 {% endblock %}

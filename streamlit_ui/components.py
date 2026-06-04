@@ -60,13 +60,21 @@ def kpi_grid(items: list[dict[str, Any]]) -> None:
     render_html(f'<section class="kpi-grid">{"".join(cards)}</section>')
 
 
-def insight_summary(title: str, paragraphs: list[str]) -> None:
+def insight_summary(
+    title: str,
+    paragraphs: list[str],
+    caption: str | None = None,
+) -> None:
+    caption_html = ""
+    if caption:
+        caption_html = f'<p class="muted chart-caption">{html.escape(caption)}</p>'
     body = "".join(
         f'<p class="summary-text">{html.escape(paragraph)}</p>' for paragraph in paragraphs
     )
     render_html(
         f'<section class="dashboard-card insight-summary">'
         f"<h2>{html.escape(title)}</h2>"
+        f"{caption_html}"
         f"{body}"
         f"</section>"
     )

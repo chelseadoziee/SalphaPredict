@@ -77,9 +77,16 @@ if not forecast_report.get("success"):
 
 page_header(
     "Sales Forecast",
-    f'See what may sell next. SalphaPredict picks the most accurate forecast method for your data. '
+    f'See what may sell next. SalphaPredict compares forecast methods on your sales history '
+    f'and uses the most accurate one automatically. '
     f'Source: <strong>{forecast_report["source_file"]}</strong> '
     f'({forecast_report["history_range"]["start"]} to {forecast_report["history_range"]["end"]}).',
+)
+
+FORECAST_INSIGHT_TITLE = "What the Forecast Is Telling You"
+FORECAST_INSIGHT_CAPTION = (
+    "A plain language summary of the key things this forecast suggests "
+    "for your stock and sales planning."
 )
 
 if forecast_report.get("is_smart_forecast"):
@@ -139,20 +146,21 @@ if is_product_journey and focus:
     )
 
     journey_caption = (
-        f'Where <strong>{focus["product"]}</strong> has been, where it is now, and where it may go next.'
+        f'Past sales leading into what is expected next for <strong>{focus["product"]}</strong>. '
+        f'The dotted line shows where the forecast begins.'
     )
     if chosen_label:
         journey_caption += (
             f' Smart Forecast is using <strong>{chosen_label}</strong>.'
         )
-    chart_card("Forecast journey", journey_caption)
+    chart_card("Sales Timeline", journey_caption)
     forecast_charts(forecast_report.get("charts", {}))
 
     col1, col2 = st.columns(2)
     with col1:
         section_card(
-            "Revenue outlook",
-            f'Money made for {focus["product"]} over {forecast_report["forecast_period_label"].lower()}.',
+            "Revenue Estimate",
+            f"Total revenue expected for {focus['product']} over the selected period.",
         )
         if focus.get("expected_money_made") is not None:
             render_html(
@@ -165,8 +173,8 @@ if is_product_journey and focus:
             render_html('<p class="muted">Revenue forecast is not available for this file.</p>')
     with col2:
         section_card(
-            "Profit outlook",
-            f'Expected profit for {focus["product"]} over {forecast_report["forecast_period_label"].lower()}.',
+            "Profit Estimate",
+            f"How much profit {focus['product']} is expected to generate this period.",
         )
         if focus.get("has_profit") and focus.get("expected_profit") is not None:
             render_html(
@@ -182,7 +190,11 @@ if is_product_journey and focus:
         f'<p class="muted chart-caption">Suggested action: {focus["suggested_action"]}</p>'
     )
 
-    insight_summary("What this could mean", forecast_report.get("what_this_means", []))
+    insight_summary(
+        FORECAST_INSIGHT_TITLE,
+        forecast_report.get("what_this_means", []),
+        caption=FORECAST_INSIGHT_CAPTION,
+    )
 else:
     summary = forecast_report["summary"]
     kpi_grid(
@@ -220,24 +232,52 @@ else:
         ]
     )
 
-    insight_summary("What this could mean", forecast_report.get("what_this_means", []))
+    insight_summary(
+        FORECAST_INSIGHT_TITLE,
+        forecast_report.get("what_this_means", []),
+        caption=FORECAST_INSIGHT_CAPTION,
+    )
 
     charts = forecast_report.get("charts", {})
-    chart_specs = [("Expected products sold", "Past monthly sales and what may happen next.")]
+    chart_specs = [
+        (
+            "Sales Forecast",
+            "How many units were sold each month, plus what is expected ahead.",
+        )
+    ]
     if charts.get("money_made"):
-        chart_specs.append(("Expected money made", "Past monthly money made and what may happen next."))
+        chart_specs.append(
+            (
+                "Revenue Forecast",
+                "Monthly revenue so far, with an estimate of what is coming next.",
+            )
+        )
     if charts.get("profit"):
-        chart_specs.append(("Expected profit", "Past monthly profit and what may happen next."))
+        chart_specs.append(
+            (
+                "Profit Forecast",
+                "How much profit was made each month and what to expect going forward.",
+            )
+        )
     chart_specs.append(
-        ("Expected sold by product", "Which products may sell the most in the forecast period.")
+        (
+            "Top Products by Units",
+            "The products forecast to sell the most next period.",
+        )
     )
     if charts.get("product_money"):
         chart_specs.append(
-            ("Expected money made by product", "Which products may bring in the most money.")
+            (
+                "Top Products by Revenue",
+                "The products expected to bring in the most money.",
+            )
         )
     if charts.get("product_profit"):
         chart_specs.append(
-            ("Expected profit by product", "Which products may make the most profit.")
+            (
+                "Top Products by Profit",
+                "The products likely to deliver the strongest profit.",
+            )
         )
 
     cols = st.columns(2)
@@ -248,8 +288,8 @@ else:
     forecast_charts(charts)
 
     section_card(
-        "Product forecast",
-        f'What each product may do in {forecast_report["forecast_period_label"].lower()}.',
+        "Product by Product Forecast",
+        "Units, revenue, and profit estimates for each product, with a suggested stock action.",
     )
 
     render_table(
@@ -271,8 +311,8 @@ else:
     with col1:
         render_html(
             '<article class="dashboard-card stock-advice-card">'
-            "<h2>Restock soon</h2>"
-            '<p class="muted chart-caption">Fast sellers that may need regular restocking.</p>'
+            "<h2>Restock Soon</h2>"
+            '<p class="muted chart-caption">Fast moving products that will likely need topping up before the period ends.</p>'
             "</article>"
         )
         if stock_advice.get("restock_soon"):
@@ -287,8 +327,8 @@ else:
     with col2:
         render_html(
             '<article class="dashboard-card stock-advice-card">'
-            "<h2>Track closely</h2>"
-            '<p class="muted chart-caption">Products with rising demand worth watching.</p>'
+            "<h2>Rising Demand</h2>"
+            '<p class="muted chart-caption">Products with growing sales that are worth keeping a close eye on.</p>'
             "</article>"
         )
         if stock_advice.get("track_closely"):
@@ -303,8 +343,8 @@ else:
     with col3:
         render_html(
             '<article class="dashboard-card stock-advice-card">'
-            "<h2>Watch list</h2>"
-            '<p class="muted chart-caption">Products where demand may fall or profit is weak.</p>'
+            "<h2>Needs Attention</h2>"
+            '<p class="muted chart-caption">Products where demand is slowing or profit is thin. Worth reviewing.</p>'
             "</article>"
         )
         if stock_advice.get("watch_list"):

@@ -4,11 +4,10 @@ import html
 from pathlib import Path
 
 import streamlit as st
-from werkzeug.utils import secure_filename
 
 import config
 from logic.data_cleaner import clean_sales_file
-from logic.data_loader import UploadError, allowed_file, preview_excel
+from logic.data_loader import UploadError, allowed_file, preview_excel, secure_filename
 from streamlit_ui.components import render_html
 from streamlit_ui.navigation import UPLOAD_PAGE, page_button
 

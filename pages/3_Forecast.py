@@ -4,7 +4,7 @@ import streamlit as st
 
 import config
 from logic.forecasting_engine import ALL_PRODUCTS_LABEL, forecast_sales_file, list_forecast_products
-from streamlit_ui.charts import forecast_charts
+from streamlit_ui.charts import render_forecast_chart
 from streamlit_ui.components import (
     action_priority,
     advice_list,
@@ -154,7 +154,7 @@ if is_product_journey and focus:
             f' Smart Forecast is using <strong>{chosen_label}</strong>.'
         )
     chart_card("Sales Timeline", journey_caption)
-    forecast_charts(forecast_report.get("charts", {}))
+    render_forecast_chart(forecast_report.get("charts", {}), "journey_line")
 
     col1, col2 = st.columns(2)
     with col1:
@@ -239,10 +239,11 @@ else:
     )
 
     charts = forecast_report.get("charts", {})
-    chart_specs = [
+    chart_specs: list[tuple[str, str, str]] = [
         (
             "Sales Forecast",
             "How many units were sold each month, plus what is expected ahead.",
+            "products_sold",
         )
     ]
     if charts.get("money_made"):
@@ -250,6 +251,7 @@ else:
             (
                 "Revenue Forecast",
                 "Monthly revenue so far, with an estimate of what is coming next.",
+                "money_made",
             )
         )
     if charts.get("profit"):
@@ -257,12 +259,14 @@ else:
             (
                 "Profit Forecast",
                 "How much profit was made each month and what to expect going forward.",
+                "profit",
             )
         )
     chart_specs.append(
         (
             "Top Products by Units",
             "The products forecast to sell the most next period.",
+            "product_units",
         )
     )
     if charts.get("product_money"):
@@ -270,6 +274,7 @@ else:
             (
                 "Top Products by Revenue",
                 "The products expected to bring in the most money.",
+                "product_money",
             )
         )
     if charts.get("product_profit"):
@@ -277,15 +282,15 @@ else:
             (
                 "Top Products by Profit",
                 "The products likely to deliver the strongest profit.",
+                "product_profit",
             )
         )
 
     cols = st.columns(2)
-    for index, (title, caption) in enumerate(chart_specs):
+    for index, (title, caption, chart_key) in enumerate(chart_specs):
         with cols[index % 2]:
             chart_card(title, caption)
-
-    forecast_charts(charts)
+            render_forecast_chart(charts, chart_key)
 
     section_card(
         "Product by Product Forecast",

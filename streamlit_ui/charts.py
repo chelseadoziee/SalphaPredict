@@ -53,8 +53,9 @@ def show_figure(fig: go.Figure) -> None:
     st.plotly_chart(fig, use_container_width=True, config={"displayModeBar": False})
 
 
-def dashboard_charts(charts: dict[str, Any]) -> None:
-    if charts.get("monthly_trend"):
+def render_dashboard_chart(charts: dict[str, Any], chart_key: str) -> None:
+    """Render one sales dashboard chart directly beneath its card title."""
+    if chart_key == "monthly_quantity" and charts.get("monthly_trend"):
         monthly = charts["monthly_trend"]
         fig = go.Figure(
             go.Bar(
@@ -72,7 +73,10 @@ def dashboard_charts(charts: dict[str, Any]) -> None:
             )
         )
         show_figure(fig)
+        return
 
+    if chart_key == "monthly_revenue" and charts.get("monthly_trend"):
+        monthly = charts["monthly_trend"]
         if monthly.get("revenue") and any(value is not None for value in monthly["revenue"]):
             fig = go.Figure(
                 go.Bar(
@@ -93,8 +97,9 @@ def dashboard_charts(charts: dict[str, Any]) -> None:
                 )
             )
             show_figure(fig)
+        return
 
-    if charts.get("top_products"):
+    if chart_key == "top_products" and charts.get("top_products"):
         series = charts["top_products"]
         fig = go.Figure(
             go.Bar(
@@ -114,8 +119,9 @@ def dashboard_charts(charts: dict[str, Any]) -> None:
             )
         )
         show_figure(fig)
+        return
 
-    if charts.get("revenue_by_product"):
+    if chart_key == "revenue_by_product" and charts.get("revenue_by_product"):
         series = charts["revenue_by_product"]
         fig = go.Figure(
             go.Bar(
@@ -138,6 +144,16 @@ def dashboard_charts(charts: dict[str, Any]) -> None:
             )
         )
         show_figure(fig)
+
+
+def dashboard_charts(charts: dict[str, Any]) -> None:
+    for chart_key in (
+        "monthly_quantity",
+        "monthly_revenue",
+        "top_products",
+        "revenue_by_product",
+    ):
+        render_dashboard_chart(charts, chart_key)
 
 
 def _history_forecast_figure(series: dict[str, Any], y_title: str, is_money: bool) -> go.Figure:
@@ -336,23 +352,41 @@ def product_journey_chart(journey: dict[str, Any]) -> None:
     show_figure(fig)
 
 
-def forecast_charts(charts: dict[str, Any]) -> None:
-    if charts.get("journey_line"):
-        product_journey_chart(charts["journey_line"])
+def render_forecast_chart(charts: dict[str, Any], chart_key: str) -> None:
+    """Render one forecast chart directly beneath its card title."""
+    if chart_key == "journey_line":
+        if charts.get("journey_line"):
+            product_journey_chart(charts["journey_line"])
         return
 
-    if charts.get("products_sold"):
+    if chart_key == "products_sold" and charts.get("products_sold"):
         show_figure(_history_forecast_figure(charts["products_sold"], "Products sold", False))
-    if charts.get("money_made"):
+    elif chart_key == "money_made" and charts.get("money_made"):
         show_figure(_history_forecast_figure(charts["money_made"], "Money made", True))
-    if charts.get("profit"):
+    elif chart_key == "profit" and charts.get("profit"):
         show_figure(_history_forecast_figure(charts["profit"], "Profit", True))
-    if charts.get("product_units"):
+    elif chart_key == "product_units" and charts.get("product_units"):
         show_figure(_horizontal_product_figure(charts["product_units"], "Expected sold", False))
-    if charts.get("product_money"):
+    elif chart_key == "product_money" and charts.get("product_money"):
         show_figure(_horizontal_product_figure(charts["product_money"], "Expected money made", True))
-    if charts.get("product_profit"):
+    elif chart_key == "product_profit" and charts.get("product_profit"):
         show_figure(_horizontal_product_figure(charts["product_profit"], "Expected profit", True))
+
+
+def forecast_charts(charts: dict[str, Any]) -> None:
+    if charts.get("journey_line"):
+        render_forecast_chart(charts, "journey_line")
+        return
+
+    for chart_key in (
+        "products_sold",
+        "money_made",
+        "profit",
+        "product_units",
+        "product_money",
+        "product_profit",
+    ):
+        render_forecast_chart(charts, chart_key)
 
 
 def profit_loss_charts(charts: dict[str, Any]) -> None:

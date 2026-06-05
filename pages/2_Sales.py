@@ -4,7 +4,7 @@ import streamlit as st
 
 import config
 from logic.sales_analyser import analyse_sales_file
-from streamlit_ui.charts import dashboard_charts
+from streamlit_ui.charts import render_dashboard_chart
 from streamlit_ui.components import (
     chart_card,
     insight_summary,
@@ -62,26 +62,43 @@ kpi_grid(
 
 insight_summary("Key insight", analysis.get("key_insight", []))
 
-chart_specs = [
-    ("Monthly products sold", "Shows how many products were sold each month."),
+charts = analysis.get("charts", {})
+chart_specs: list[tuple[str, str, str]] = [
+    (
+        "Monthly products sold",
+        "Shows how many products were sold each month.",
+        "monthly_quantity",
+    )
 ]
 if summary.get("total_revenue") is not None:
-    chart_specs.append(("Monthly money made", "Shows how much money was made each month."))
-chart_specs.extend(
-    [
-        ("Most popular products", "Shows which products were sold the most."),
-    ]
+    chart_specs.append(
+        (
+            "Monthly money made",
+            "Shows how much money was made each month.",
+            "monthly_revenue",
+        )
+    )
+chart_specs.append(
+    (
+        "Most popular products",
+        "Shows which products were sold the most.",
+        "top_products",
+    )
 )
 if analysis.get("revenue_by_product"):
-    chart_specs.append(("Money made by product", "Shows which products brought in the most money."))
+    chart_specs.append(
+        (
+            "Money made by product",
+            "Shows which products brought in the most money.",
+            "revenue_by_product",
+        )
+    )
 
 cols = st.columns(2)
-for index, (title, caption) in enumerate(chart_specs):
+for index, (title, caption, chart_key) in enumerate(chart_specs):
     with cols[index % 2]:
         chart_card(title, caption)
-
-charts = analysis.get("charts", {})
-dashboard_charts(charts)
+        render_dashboard_chart(charts, chart_key)
 
 section_card(
     "Product overview",
